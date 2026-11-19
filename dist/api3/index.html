@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="API 3 interaktiivne õpirakendus: tehisaru API-de ühendamine enda rakendusega ning Statistikaameti andmete tõlgendamine Gemini API abil.">
   <title>API 3 · Tehisaru API-de ühendamine enda rakendusega</title>
-  <link rel="stylesheet" href="styles.css?v=57">
+  <link rel="stylesheet" href="styles.css?v=58">
   <link rel="stylesheet" href="../api-common.css?v=1">
 </head>
 <body>
@@ -207,52 +207,67 @@ cat(paste(tekst, collapse = <span class="str">"\n"</span>))</code></pre>
 
     <section class="practice-suite locked" id="practiceSuite" aria-labelledby="practiceTitle" aria-disabled="true">
       <header class="practice-suite-head">
-        <div><span class="section-kicker">ISESEISEV HARJUTUS · API 3 SLAIDID</span><h2 id="practiceTitle">Kavanda 4–5-sammuline AI API töövoog</h2></div>
-        <p>Vali R, veebirakendus, automaatikaplatvorm või muu keskkond. Märgi selgelt, kus AI API sekkub ja kus inimene tulemust kontrollib.</p>
+        <div><span class="section-kicker">ISESEISEV HARJUTUS · API 3 SLAIDID</span><h2 id="practiceTitle">Kavanda kontrollitud AI API töövoog</h2></div>
+        <p>Tee valikud rippmenüüdest. Paremal tekib reaalajas viiesammuline töövoog ja kasutajale kuvatava tulemuse visuaalne näide.</p>
       </header>
 
       <div class="planner-grid">
         <form class="planner-form card" id="workflowPlanner">
           <section class="planner-section">
             <div class="planner-number">1</div>
-            <div><span class="section-kicker">PROBLEEM JA KASU</span><h3>Millist korduvat ülesannet lahendad?</h3></div>
-            <label class="planner-field planner-wide"><span>Probleem või ülesanne</span><textarea id="problemInput" rows="2" placeholder="Näiteks: küsitluse avatud vastuste esmane teemastamine"></textarea></label>
-            <label class="planner-field"><span>Miks on AI siin vajalik?</span><textarea id="benefitInput" rows="2" placeholder="Kirjelda loodavat kasu"></textarea></label>
-            <label class="planner-field"><span>Käivituskeskkond</span><select id="environmentInput"><option value="">Vali keskkond</option><option>R / RStudio</option><option>Python</option><option>Veebirakendus</option><option>n8n / Make / Zapier</option><option>Google Sheets + Apps Script</option><option>Muu keskkond</option></select></label>
+            <div><span class="section-kicker">KASUTUSJUHT JA KÄIVITUS</span><h3>Mida automatiseerid ja kust töövoog algab?</h3></div>
+            <div class="planner-fields-grid">
+              <label class="planner-field planner-wide"><span>Kasutusjuht</span><select id="useCaseInput"><option value="">Vali korduv ülesanne</option><option value="statistics">Statistikaandmete muutuse selgitamine</option><option value="survey">Küsitluse vastuste teemastamine</option><option value="documents">Dokumentidest info eraldamine</option><option value="support">Kliendipäringute liigitamine</option><option value="meetings">Koosolekumärkmete kokkuvõte</option><option value="content">Tootekirjelduste mustandid</option><option value="other">Muu korduv ülesanne</option></select></label>
+              <label class="planner-field"><span>Käivituskeskkond</span><select id="environmentInput"><option value="">Vali keskkond</option><option value="r">R / RStudio</option><option value="python">Python</option><option value="web">Veebirakendus</option><option value="automation">n8n / Make / Zapier</option><option value="sheets">Google Sheets + Apps Script</option><option value="backend">Serverirakendus</option></select></label>
+              <label class="planner-field"><span>Käivitaja</span><select id="triggerInput"><option value="">Vali käivitus</option><option value="button">Kasutaja vajutab nuppu</option><option value="schedule">Ajastatud töö</option><option value="new-data">Uus andmekirje</option><option value="form">Vormi esitamine</option><option value="batch">Failide hulgilaadimine</option></select></label>
+            </div>
           </section>
 
           <section class="planner-section">
             <div class="planner-number">2</div>
-            <div><span class="section-kicker">TÖÖVOOG JA AI ROLL</span><h3>Kust tulevad andmed ja mida teeb AI?</h3></div>
-            <label class="planner-field"><span>Andmeallikas</span><input id="sourceInput" type="text" placeholder="API, vorm, e-kiri, dokument…"></label>
-            <label class="planner-field"><span>AI piiratud ülesanne</span><input id="aiRoleInput" type="text" placeholder="Liigitab, eraldab, võtab kokku…"></label>
+            <div><span class="section-kicker">ANDMED JA AI ROLL</span><h3>Mida saadad ja mida mudel täpselt teeb?</h3></div>
+            <div class="planner-fields-grid">
+              <label class="planner-field"><span>Andmeallikas</span><select id="sourceInput"><option value="">Vali andmeallikas</option><option value="statistics-api">Statistikaameti API</option><option value="database-api">Andmebaas või muu API</option><option value="csv">CSV- või Exceli fail</option><option value="form">Veebivormi vastused</option><option value="email">E-kirjad</option><option value="documents">Dokumendikaust</option><option value="crm">CRM või kasutajatugi</option></select></label>
+              <label class="planner-field"><span>Andmete tundlikkus</span><select id="sensitivityInput"><option value="">Vali tundlikkus</option><option value="public">Avalikud andmed</option><option value="internal">Asutusesisesed andmed</option><option value="personal">Isikuandmed</option><option value="sensitive">Tundlikud isikuandmed</option></select></label>
+              <label class="planner-field"><span>AI piiratud ülesanne</span><select id="aiRoleInput"><option value="">Vali üks selge ülesanne</option><option value="explain">Selgitab arvulist muutust</option><option value="classify">Liigitab etteantud kategooriatesse</option><option value="extract">Eraldab kindlad väljad</option><option value="summarize">Võtab sisu kokku</option><option value="draft">Koostab mustandi</option><option value="translate">Tõlgib teksti</option><option value="detect">Tuvastab erandid</option></select></label>
+              <label class="planner-field"><span>Mudel või API</span><select id="modelInput"><option value="">Vali teenus</option><option value="gemini">Gemini API</option><option value="openai">OpenAI API</option><option value="anthropic">Anthropic API</option><option value="azure">Azure OpenAI</option><option value="local">Lokaalne avatud mudel</option></select></label>
+            </div>
           </section>
 
           <section class="planner-section">
             <div class="planner-number">3</div>
-            <div><span class="section-kicker">TULEMUS JA KONTROLL</span><h3>Mis saab mudeli väljundist edasi?</h3></div>
-            <label class="planner-field"><span>Mudeli väljund</span><input id="outputInput" type="text" placeholder="Tekst, JSON või tabel"></label>
-            <label class="planner-field"><span>Kontrollija ja kontroll</span><input id="controlInput" type="text" placeholder="Kes kontrollib mida?"></label>
+            <div><span class="section-kicker">VÄLJUND JA KONTROLL</span><h3>Kuidas tulemus kuvatakse ja kes vastutab?</h3></div>
+            <div class="planner-fields-grid">
+              <label class="planner-field"><span>API vastuse vorming</span><select id="formatInput"><option value="">Vali vorming</option><option value="json">JSON</option><option value="schema">Struktureeritud JSON-skeem</option><option value="text">Lihttekst</option><option value="markdown">Markdown</option><option value="table">Tabel</option></select></label>
+              <label class="planner-field"><span>Tulemuse visuaal</span><select id="visualInput"><option value="">Vali kasutajavaade</option><option value="kpi">KPI-kaart</option><option value="chart">Tulpdiagramm</option><option value="table">Tulemuste tabel</option><option value="notification">Teavituskaart</option><option value="summary">Tekstiline kokkuvõte</option><option value="json">JSON-vaade</option></select></label>
+              <label class="planner-field"><span>Inimkontroll</span><select id="controlInput"><option value="">Vali kontroll</option><option value="approve">Inimene kinnitab enne avaldamist</option><option value="facts">Kontrollitakse fakte ja algallikat</option><option value="exceptions">Inimene lahendab ainult erandid</option><option value="sample">Kontrollitakse juhuvalimit</option><option value="owner">Valdkonna omanik kontrollib tulemuse</option></select></label>
+              <label class="planner-field"><span>Tõrke- ja varuplaan</span><select id="fallbackInput"><option value="">Vali varuplaan</option><option value="manual">Ülesanne liigub käsitsi töötlusse</option><option value="retry">Päringut proovitakse piiratud arv kordi uuesti</option><option value="queue">Tulemus jääb kontrolljärjekorda</option><option value="cache">Kuvatakse viimane kontrollitud tulemus</option><option value="notify">Vastutajale saadetakse veateavitus</option></select></label>
+            </div>
           </section>
 
           <div class="planner-actions">
             <button class="primary-button" id="buildWorkflow" type="button"><span>Koosta töövoo visand</span><i>→</i></button>
             <button class="secondary-button" id="clearWorkflow" type="button">Tühjenda</button>
           </div>
-          <p class="planner-privacy"><b>Privaatsus:</b> sisestatud tekst jääb ainult sellesse brauseri vaatesse ja seda ei saadeta ühelegi API-le.</p>
+          <p class="planner-privacy"><b>Privaatsus:</b> valikud jäävad ainult sellesse brauseri vaatesse ja neid ei saadeta ühelegi API-le.</p>
         </form>
 
         <article class="workflow-preview card" aria-live="polite">
-          <div class="preview-head"><div><span class="section-kicker">VÄLJUND · 4–5 SAMMU</span><h3>Sinu töövoo visand</h3></div><span class="exercise-state" id="plannerState">0 / 7 välja</span></div>
+          <div class="preview-head"><div><span class="section-kicker">VÄLJUND · 5 SAMMU</span><h3>Sinu töövoo visand</h3></div><span class="exercise-state" id="plannerState">0 / 11 valikut</span></div>
           <ol class="workflow-diagram" id="workflowDiagram">
-            <li><span>1</span><div><b>Probleem</b><small id="previewProblem">Kirjelda lahendatav probleem</small></div></li>
-            <li><span>2</span><div><b>Andmed ja keskkond</b><small id="previewSource">Määra allikas ja käivituskeskkond</small></div></li>
-            <li class="ai-step"><span>AI</span><div><b>AI API sekkub</b><small id="previewAi">Piira mudeli roll ühe selge ülesandega</small></div></li>
-            <li><span>4</span><div><b>Väljund ja järgmine samm</b><small id="previewOutput">Määra mudeli tagastatav väljund</small></div></li>
-            <li class="control-step"><span>✓</span><div><b>Inimkontroll</b><small id="previewControl">Määra kontrollija ja kontrollitav osa</small></div></li>
+            <li><span>1</span><div><b>Käivitus ja keskkond</b><small id="previewTrigger">Vali kasutusjuht, käivitaja ja keskkond</small></div></li>
+            <li><span>2</span><div><b>Andmed</b><small id="previewSource">Määra allikas ja andmete tundlikkus</small></div></li>
+            <li class="ai-step"><span>AI</span><div><b>AI API sekkub</b><small id="previewAi">Vali mudel ja piira selle roll</small></div></li>
+            <li><span>4</span><div><b>Väljund</b><small id="previewOutput">Vali vastuse vorming ja kasutajavaade</small></div></li>
+            <li class="control-step"><span>✓</span><div><b>Inimkontroll ja varuplaan</b><small id="previewControl">Määra kontroll ning tegevus tõrke korral</small></div></li>
           </ol>
-          <div class="planner-summary" id="plannerSummary">Täida väljad ning koosta visand. Valmis väljund peab näitama, kus AI sekkub ja kus toimub kontroll.</div>
-          <div class="safety-checks"><span>□ Andmete saatmine on lubatud</span><span>□ Teenuse tingimused on kontrollitud</span><span>□ Kulu ja katkestuse plaan on läbi mõeldud</span></div>
+          <section class="output-visual" aria-labelledby="outputVisualTitle">
+            <div class="output-visual-head"><div><span class="section-kicker">KASUTAJALE KUVATAV TULEMUS</span><h4 id="outputVisualTitle">Visuaalne näide</h4></div><span id="visualKind">Vali vaade</span></div>
+            <div class="output-canvas is-empty" id="outputCanvas"><div class="output-empty"><span aria-hidden="true">◇</span><b>Visuaal tekib siia</b><small>Vali kasutusjuht ja tulemuse visuaal.</small></div></div>
+            <div class="output-meta"><span id="visualFormat">Vorming valimata</span><span id="visualModel">Mudel valimata</span></div>
+          </section>
+          <div class="planner-summary" id="plannerSummary">Tee valikud. Skeem ja tulemuse visuaal uuenevad automaatselt; nupuga saad valmis töövoo kinnitada.</div>
+          <div class="decision-checks" aria-label="Töövoo kvaliteedikontroll"><span id="privacyCheck">○ Määra andmete tundlikkus</span><span id="structureCheck">○ Määra vastuse vorming</span><span id="reviewCheck">○ Määra inimkontroll</span><span id="resilienceCheck">○ Määra tõrkeplaan</span></div>
         </article>
       </div>
     </section>
@@ -304,6 +319,6 @@ cat(paste(tekst, collapse = <span class="str">"\n"</span>))</code></pre>
   </dialog>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="../api-nav.js"></script>
-  <script src="app.js?v=57"></script>
+  <script src="app.js?v=58"></script>
 </body>
 </html>

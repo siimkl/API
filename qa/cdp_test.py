@@ -196,6 +196,49 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
         screenshot("api3-footer.png")
         evaluate("scrollTo(0, 0)")
 
+        planner = json.loads(evaluate("""JSON.stringify((() => {
+          practiceSuite.classList.remove('locked');
+          const choices = {
+            useCaseInput: 'statistics', environmentInput: 'r', triggerInput: 'button',
+            sourceInput: 'statistics-api', sensitivityInput: 'public', aiRoleInput: 'explain',
+            modelInput: 'gemini', formatInput: 'json', visualInput: 'chart',
+            controlInput: 'facts', fallbackInput: 'retry'
+          };
+          Object.entries(choices).forEach(([id, value]) => {
+            const select = document.getElementById(id);
+            select.value = value;
+            select.dispatchEvent(new Event('change', {bubbles: true}));
+          });
+          return {
+            state: plannerState.textContent.trim(),
+            visual: outputCanvas.className,
+            bars: outputCanvas.querySelectorAll('.mini-bars i').length,
+            checks: document.querySelectorAll('.decision-checks .good').length,
+            summaryGood: plannerSummary.classList.contains('good')
+          };
+        })())"""))
+        assert planner == {
+            "state": "11 / 11 valikut",
+            "visual": "output-canvas visual-chart",
+            "bars": 3,
+            "checks": 4,
+            "summaryGood": False,
+        }, planner
+        evaluate("buildWorkflow.click(); practiceSuite.scrollIntoView({block:'start'})")
+        time.sleep(0.4)
+        assert evaluate("plannerSummary.classList.contains('good') && outputCanvas.classList.contains('is-built')")
+        screenshot("api3-planner-chart.png")
+
+        visual_variants = json.loads(evaluate("""JSON.stringify((() => {
+          const expected = {kpi:'.kpi-visual', chart:'.chart-visual', table:'.table-visual', notification:'.notification-visual', summary:'.summary-visual', json:'.json-visual'};
+          return Object.fromEntries(Object.entries(expected).map(([value, selector]) => {
+            visualInput.value = value;
+            visualInput.dispatchEvent(new Event('change', {bubbles:true}));
+            return [value, Boolean(outputCanvas.querySelector(selector))];
+          }));
+        })())"""))
+        assert all(visual_variants.values()), visual_variants
+
         headers = [api1, api2, api3_header]
         assert all(item["heading"] == "API päringust vastuseni" for item in headers), headers
         assert all(item["mission"] == "PRAKTIKUMI EDENEMINE" for item in headers), headers
@@ -228,7 +271,25 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
         assert len({item["subtitleSize"] for item in mobile_headers}) == 1, mobile_headers
         screenshot("api3-header-mobile.png")
 
-        print(json.dumps({"landing": landing, "changed": changed, "headers": headers, "sharedStyles": shared_styles, "mobile": mobile, "mobileHeaders": mobile_headers}, indent=2))
+        mobile_planner = json.loads(evaluate("""JSON.stringify((() => {
+          practiceSuite.classList.remove('locked');
+          useCaseInput.value = 'survey';
+          useCaseInput.dispatchEvent(new Event('change', {bubbles:true}));
+          visualInput.value = 'chart';
+          visualInput.dispatchEvent(new Event('change', {bubbles:true}));
+          outputCanvas.scrollIntoView({block:'center'});
+          return {
+            columns: getComputedStyle(document.querySelector('.planner-grid')).gridTemplateColumns.split(' ').length,
+            bars: outputCanvas.querySelectorAll('.mini-bars i').length,
+            overflow: document.documentElement.scrollWidth > document.documentElement.clientWidth,
+            canvasFits: outputCanvas.getBoundingClientRect().width <= innerWidth
+          };
+        })())"""))
+        assert mobile_planner == {"columns": 1, "bars": 3, "overflow": False, "canvasFits": True}, mobile_planner
+        time.sleep(0.6)
+        screenshot("api3-planner-mobile.png")
+
+        print(json.dumps({"landing": landing, "changed": changed, "headers": headers, "sharedStyles": shared_styles, "planner": planner, "visualVariants": visual_variants, "mobile": mobile, "mobileHeaders": mobile_headers, "mobilePlanner": mobile_planner}, indent=2))
     finally:
         try:
             ws.close()
