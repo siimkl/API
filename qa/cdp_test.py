@@ -99,6 +99,30 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
               };
             })())"""))
 
+        def shared_style_state():
+            return json.loads(evaluate("""JSON.stringify((() => {
+              const read = (selector, properties) => {
+                const element = document.querySelector(selector);
+                if (!element) return null;
+                const style = getComputedStyle(element);
+                return Object.fromEntries(properties.map(property => [property, style[property]]));
+              };
+              return {
+                briefing: read('.briefing-card', ['padding', 'borderRadius', 'marginTop', 'marginBottom', 'fontSize']),
+                step: read('.step', ['minHeight', 'padding', 'borderRadius', 'gap']),
+                lab: read('.lab-grid', ['columnGap', 'rowGap']),
+                card: read('.control-card.card', ['borderRadius', 'borderColor', 'backgroundColor']),
+                control: read('.control-card', ['padding']),
+                stage: read('.stage-card', ['padding']),
+                kicker: read('.control-head .section-kicker', ['fontSize', 'lineHeight', 'letterSpacing', 'color']),
+                button: read('.primary-button', ['minHeight', 'fontSize', 'borderRadius']),
+                footer: read('.site-footer', ['marginTop', 'paddingTop', 'borderTopColor']),
+                monogram: read('.footer-monogram', ['width', 'height', 'borderRadius']),
+                footerLabel: read('.footer-author small', ['fontSize', 'lineHeight']),
+                footerStrong: read('.footer-details strong', ['fontSize', 'lineHeight'])
+              };
+            })())"""))
+
         command("Page.enable")
         command("Runtime.enable")
         command("Emulation.setDeviceMetricsOverride", {"width": 1440, "height": 1000, "deviceScaleFactor": 1, "mobile": False})
@@ -132,20 +156,45 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
         assert evaluate("document.querySelector('.api-version-select').value") == "../api1/"
         assert "ANDMEPÄDEVUS ·" in evaluate("document.querySelector('.api-eyebrow').textContent")
         api1 = header_state()
+        api1_style = shared_style_state()
+        assert evaluate("Boolean(document.querySelector('.next-action-guide.contextual.next-target'))")
+        assert not evaluate("performance.getEntriesByType('resource').some(entry => entry.name.includes('fonts.googleapis.com'))")
         screenshot("api1-header.png")
+        evaluate("scrollTo(0, document.documentElement.scrollHeight)")
+        time.sleep(0.3)
+        screenshot("api1-footer.png")
+        evaluate("scrollTo(0, 0)")
+        evaluate("getMetadata.click()")
+        time.sleep(0.2)
+        assert evaluate("flowDialog.open && getMetadata.disabled")
 
         evaluate("document.querySelector('.api-version-select').value='../api2/'; document.querySelector('.api-version-select').dispatchEvent(new Event('change',{bubbles:true}))")
         wait_for_path("/api2/")
         assert evaluate("document.querySelector('.api-version-select').value") == "../api2/"
         api2 = header_state()
+        api2_style = shared_style_state()
+        assert evaluate("Boolean(document.querySelector('.next-action-guide.contextual.next-target'))")
+        assert not evaluate("performance.getEntriesByType('resource').some(entry => entry.name.includes('fonts.googleapis.com'))")
         screenshot("api2-header.png")
+        evaluate("scrollTo(0, document.documentElement.scrollHeight)")
+        time.sleep(0.3)
+        screenshot("api2-footer.png")
+        evaluate("scrollTo(0, 0)")
+        evaluate("getMetadata.click()")
+        time.sleep(0.2)
+        assert evaluate("flowDialog.open && getMetadata.disabled")
 
         evaluate("document.querySelector('.api-version-select').value='../api3/'; document.querySelector('.api-version-select').dispatchEvent(new Event('change',{bubbles:true}))")
         wait_for_path("/api3/")
         api3 = json.loads(evaluate("JSON.stringify({selected:document.querySelector('.api-version-select').value,title:document.title,heading:document.querySelector('h1').getAttribute('aria-label')})"))
         assert api3["selected"] == "../api3/" and api3["title"].startswith("API 3"), api3
         api3_header = header_state()
+        api3_style = shared_style_state()
         screenshot("api3-header.png")
+        evaluate("scrollTo(0, document.documentElement.scrollHeight)")
+        time.sleep(0.3)
+        screenshot("api3-footer.png")
+        evaluate("scrollTo(0, 0)")
 
         headers = [api1, api2, api3_header]
         assert all(item["heading"] == "API päringust vastuseni" for item in headers), headers
@@ -154,6 +203,11 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
         assert len({item["headingSize"] for item in headers}) == 1, headers
         assert len({item["headingLineHeight"] for item in headers}) == 1, headers
         assert len({item["subtitleSize"] for item in headers}) == 1, headers
+
+        shared_styles = [api1_style, api2_style, api3_style]
+        for key in ("briefing", "lab", "card", "control", "stage", "kicker", "button", "footer", "monogram", "footerLabel", "footerStrong"):
+            assert len({json.dumps(item[key], sort_keys=True) for item in shared_styles}) == 1, {key: [item[key] for item in shared_styles]}
+        assert not evaluate("performance.getEntriesByType('resource').some(entry => entry.name.includes('fonts.googleapis.com'))")
 
         command("Page.navigate", {"url": URL})
         wait_for_path("/")
@@ -174,7 +228,7 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
         assert len({item["subtitleSize"] for item in mobile_headers}) == 1, mobile_headers
         screenshot("api3-header-mobile.png")
 
-        print(json.dumps({"landing": landing, "changed": changed, "headers": headers, "mobile": mobile, "mobileHeaders": mobile_headers}, indent=2))
+        print(json.dumps({"landing": landing, "changed": changed, "headers": headers, "sharedStyles": shared_styles, "mobile": mobile, "mobileHeaders": mobile_headers}, indent=2))
     finally:
         try:
             ws.close()

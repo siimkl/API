@@ -6,6 +6,7 @@
   <meta name="description" content="Interaktiivne API päringulabor: uuri metaandmeid, koosta POST-päring, lahenda veakoode ja kontrolli vastust.">
   <title>API 1 · Saada päring. Loe vastust.</title>
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="../api-common.css?v=1">
 </head>
 <body>
   <main class="shell" id="app">
@@ -26,7 +27,7 @@
     </header>
 
     <section class="briefing-card" aria-label="Ülesanne">
-      <div class="briefing-mark">!</div>
+      <div class="briefing-mark">API</div>
       <div><span>ÜLESANNE</span><p><b>Uurimisküsimus: kui suur oli keskmine brutokuupalk tegevusalade koondnäitaja „Kokku – kõik tegevusalad” puhul 2024., 2025. ja 2026. aasta II kvartalis ning kuidas see muutus?</b> Leia API-st need kolm väärtust ja kontrolli saadud vastuse sisu ning tähendust.</p></div>
     </section>
 
@@ -92,7 +93,10 @@ Accept: application/json</pre>
               <p class="full-request-note"><b>GET</b> on meetod, selle järel on täielik aadress. <b>Accept</b> ütleb, et soovime vastust JSON-vormingus. Sellel päringul pole keha.</p>
             </div>
           </details>
-          <button class="primary-button" id="getMetadata" type="button"><span>Küsi metaandmed</span><i>→</i></button>
+          <div class="next-action-guide contextual">
+            <span class="next-action-label" aria-hidden="true">JÄRGMISENA <i>↓</i></span>
+            <button class="primary-button" id="getMetadata" type="button"><span>Küsi metaandmed</span><i>→</i></button>
+          </div>
         </section>
 
         <section class="control-section locked" id="selectionSection">
@@ -124,7 +128,10 @@ Accept: application/json</pre>
                 <p class="full-request-note">Esimesel real on meetod ja aadress, seejärel päised. Tühja rea järel algab JSON-vormingus päringu keha.</p>
               </div>
             </details>
-            <button class="primary-button orange" id="sendRequest" type="button"><span>Saada POST-päring</span><i>→</i></button>
+            <div class="next-action-guide contextual">
+              <span class="next-action-label" aria-hidden="true">JÄRGMISENA <i>↓</i></span>
+              <button class="primary-button orange" id="sendRequest" type="button"><span>Saada POST-päring</span><i>→</i></button>
+            </div>
           </fieldset>
           <div class="feedback" id="requestFeedback" hidden></div>
         </section>
@@ -252,10 +259,10 @@ Accept: application/json</pre>
     </section>
 
     <footer class="site-footer">
-      <div class="footer-author"><span class="footer-monogram" aria-hidden="true">SK</span><div><small>Simulatsiooni autor</small><strong>Siim Klais</strong></div></div>
+      <div class="footer-author"><span class="footer-monogram" aria-hidden="true">SK</span><div><small>Õppematerjali autor</small><strong>Siim Klais</strong></div></div>
       <div class="footer-details">
         <div class="footer-detail">
-          <small>Kasutatud tehnoloogia</small>
+          <small>Tehnoloogia</small>
           <strong>HTML5 · CSS3 · JavaScript (ES2022)</strong>
           <span>Buildless veebirakendus, mis töötab otse brauseris.</span>
         </div>

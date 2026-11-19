@@ -452,13 +452,15 @@
   }
   function setGuide(_text, target, _buttonText = "Näita kohta") {
     $$(".next-target").forEach(item => item.classList.remove("next-target"));
-    if (target) target.classList.add("next-target");
+    const guideTarget = target?.closest(".next-action-guide.contextual") || target;
+    if (guideTarget) guideTarget.classList.add("next-target");
     syncHeight();
   }
 
   function hideGuide(target = null) {
     $$(".next-target").forEach(item => item.classList.remove("next-target"));
-    if (target) target.classList.add("next-target");
+    const guideTarget = target?.closest(".next-action-guide.contextual") || target;
+    if (guideTarget) guideTarget.classList.add("next-target");
     syncHeight();
   }
 
