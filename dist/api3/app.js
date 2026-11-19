@@ -742,23 +742,6 @@
     "fallbackInput"
   ];
 
-  const plannerPresets = {
-    statistics: {
-      name: "Statistika selgitaja",
-      values: { useCaseInput: "statistics", environmentInput: "r", triggerInput: "button", sourceInput: "statistics-api", sensitivityInput: "public", aiRoleInput: "explain", modelInput: "gemini", formatInput: "json", visualInput: "chart", controlInput: "facts", fallbackInput: "retry" }
-    },
-    survey: {
-      name: "Tagasiside teemastaja",
-      values: { useCaseInput: "survey", environmentInput: "automation", triggerInput: "form", sourceInput: "form", sensitivityInput: "personal", aiRoleInput: "classify", modelInput: "azure", formatInput: "schema", visualInput: "table", controlInput: "exceptions", fallbackInput: "queue" }
-    },
-    documents: {
-      name: "Dokumendiväljade eraldaja",
-      values: { useCaseInput: "documents", environmentInput: "python", triggerInput: "batch", sourceInput: "documents", sensitivityInput: "internal", aiRoleInput: "extract", modelInput: "local", formatInput: "schema", visualInput: "json", controlInput: "approve", fallbackInput: "manual" }
-    }
-  };
-
-  let activePlannerPreset = "";
-
   function plannerValue(id) {
     return $(`#${id}`).value.trim();
   }
@@ -888,9 +871,7 @@
 
     const summary = $("#plannerSummary");
     summary.classList.toggle("good", showResult && completedFields === plannerFields.length);
-    if (!showResult && activePlannerPreset) {
-      summary.textContent = `Näidis „${plannerPresets[activePlannerPreset].name}” on laaditud. Muuda vähemalt üht otsust ning jälgi, kuidas skoor, API-päring ja tõrketest reageerivad.`;
-    } else if (!showResult) {
+    if (!showResult) {
       summary.textContent = "Tee valikud. Skeem, valmidusskoor ja API-päringu visand uuenevad automaatselt; nupuga saad valmis töövoo kinnitada.";
     } else if (completedFields === plannerFields.length) {
       summary.textContent = `Valmis. Valmidusskoor on ${totalScore}/100. ${plannerLabel("environmentInput", "Valitud keskkond")} käivitab töövoo: ${plannerLabel("sourceInput", "andmeallikas")} → ${plannerLabel("modelInput", "AI API")} → ${plannerLabel("visualInput", "tulemuse vaade")} → ${plannerLabel("controlInput", "inimkontroll")}.`;
@@ -903,19 +884,7 @@
   function resetPlanner() {
     $("#workflowPlanner").reset();
     $("#stressInput").value = "";
-    activePlannerPreset = "";
-    $$('[data-planner-preset]').forEach((button) => button.classList.remove("active"));
     updatePlannerPreview(false);
-  }
-
-  function applyPlannerPreset(key) {
-    const preset = plannerPresets[key];
-    if (!preset) return;
-    activePlannerPreset = key;
-    Object.entries(preset.values).forEach(([id, value]) => { $(`#${id}`).value = value; });
-    $$('[data-planner-preset]').forEach((button) => button.classList.toggle("active", button.dataset.plannerPreset === key));
-    updatePlannerPreview(false);
-    $("#workflowPlanner").scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   function reset() {
@@ -976,12 +945,7 @@
   els.prevLesson.addEventListener("click", () => showStep(currentStep - 1, true));
   els.nextLesson.addEventListener("click", () => showStep(currentStep + 1, true));
   $("#resetButton").addEventListener("click", reset);
-  plannerFields.forEach((id) => $(`#${id}`).addEventListener("change", () => {
-    activePlannerPreset = "";
-    $$('[data-planner-preset]').forEach((button) => button.classList.remove("active"));
-    updatePlannerPreview(false);
-  }));
-  $$('[data-planner-preset]').forEach((button) => button.addEventListener("click", () => applyPlannerPreset(button.dataset.plannerPreset)));
+  plannerFields.forEach((id) => $(`#${id}`).addEventListener("change", () => updatePlannerPreview(false)));
   $("#stressInput").addEventListener("change", () => {
     const values = Object.fromEntries(plannerFields.map((id) => [id, plannerValue(id)]));
     renderStressTest(values);

@@ -219,7 +219,7 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
             checks: document.querySelectorAll('.decision-checks .good').length,
             summaryGood: plannerSummary.classList.contains('good'),
             quality: qualityScore.textContent.trim(),
-            presets: document.querySelectorAll('[data-planner-preset]').length,
+            launchpadRemoved: !document.querySelector('.practice-launchpad'),
             request: plannerRequest.textContent.includes('/v1beta/models/gemini:generateContent')
           };
         })())"""))
@@ -229,7 +229,7 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
             "checks": 4,
             "summaryGood": False,
             "quality": "100",
-            "presets": 3,
+            "launchpadRemoved": True,
             "request": True,
         }, planner
         evaluate("buildWorkflow.click(); practiceSuite.scrollIntoView({block:'start'})")
@@ -241,16 +241,25 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
           stressInput.value = 'rate-limit';
           stressInput.dispatchEvent(new Event('change', {bubbles:true}));
           const stressWorks = stressResult.classList.contains('good');
-          document.querySelector('[data-planner-preset="documents"]').click();
+          const choices = {
+            useCaseInput: 'documents', environmentInput: 'python', triggerInput: 'batch',
+            sourceInput: 'documents', sensitivityInput: 'internal', aiRoleInput: 'extract',
+            modelInput: 'local', formatInput: 'schema', visualInput: 'json',
+            controlInput: 'approve', fallbackInput: 'manual'
+          };
+          Object.entries(choices).forEach(([id, value]) => {
+            const select = document.getElementById(id);
+            select.value = value;
+            select.dispatchEvent(new Event('change', {bubbles:true}));
+          });
           return {
             stressWorks,
-            activePreset: document.querySelector('[data-planner-preset].active')?.dataset.plannerPreset,
             useCase: useCaseInput.value,
             quality: qualityScore.textContent.trim(),
             request: plannerRequest.textContent.includes('/v1/chat/completions')
           };
         })())"""))
-        assert learning_features == {"stressWorks": True, "activePreset": "documents", "useCase": "documents", "quality": "98", "request": True}, learning_features
+        assert learning_features == {"stressWorks": True, "useCase": "documents", "quality": "98", "request": True}, learning_features
         evaluate("practiceSuite.scrollIntoView({block:'start'})")
         time.sleep(0.5)
         screenshot("api3-planner-learning.png")
