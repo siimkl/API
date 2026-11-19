@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="et">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Andmepädevuse API-praktikumid: vali API 1, API 2 või API 3 ja alusta interaktiivset harjutust.">
+  <title>Andmepädevus · API-praktikumid</title>
+  <link rel="stylesheet" href="landing.css">
+</head>
+<body>
+  <main class="launcher">
+    <header class="launcher-hero">
+      <div class="brand"><span aria-hidden="true"></span>ANDMEPÄDEVUS · API</div>
+      <div class="hero-grid">
+        <div>
+          <p class="kicker">KOLM JÄRJESTIKUST PRAKTIKUMI</p>
+          <h1>Vali, millise API-teemaga alustad.</h1>
+          <p class="intro">Harjutused liiguvad päringu põhialustest RStudio töövoo ja tehisaru API ühendamiseni. Vaikimisi on valitud API 1.</p>
+        </div>
+        <div class="sequence" aria-label="Õpiteekond">
+          <span>API 1<small>Päring ja vastus</small></span><i aria-hidden="true">→</i>
+          <span>API 2<small>RStudio töövoog</small></span><i aria-hidden="true">→</i>
+          <span>API 3<small>Tehisaru API</small></span>
+        </div>
+      </div>
+    </header>
+
+    <section class="chooser" aria-labelledby="chooseTitle">
+      <div class="chooser-head">
+        <div><span class="step-label">VALI PRAKTIKUM</span><h2 id="chooseTitle">Mida soovid lahendada?</h2></div>
+        <p>Versiooni saad hiljem vahetada ka iga praktikumi päisest.</p>
+      </div>
+
+      <div class="api-options" role="radiogroup" aria-label="API praktikumi valik">
+        <label class="api-card">
+          <input type="radio" name="api-version" value="api1" data-number="1" checked>
+          <span class="card-body">
+            <span class="api-number">01</span>
+            <span class="level">ALUSTA SIIT · PÕHITASE</span>
+            <strong>API 1</strong>
+            <b>Saada päring. Loe vastust.</b>
+            <small>GET ja POST, metaandmed, JSON-päring ning API vastuse kontroll.</small>
+            <em>≈ 20 min</em>
+          </span>
+        </label>
+
+        <label class="api-card">
+          <input type="radio" name="api-version" value="api2" data-number="2">
+          <span class="card-body">
+            <span class="api-number">02</span>
+            <span class="level">JÄRGMINE SAMM · RSTUDIO</span>
+            <strong>API 2</strong>
+            <b>API andmed RStudio töövoos</b>
+            <small>Küsi Statistikaameti andmed, töötle tulemust ja visualiseeri muutus.</small>
+            <em>≈ 20 min</em>
+          </span>
+        </label>
+
+        <label class="api-card">
+          <input type="radio" name="api-version" value="api3" data-number="3">
+          <span class="card-body">
+            <span class="api-number">03</span>
+            <span class="level">EDASIJÕUDNUD · TEHISARU</span>
+            <strong>API 3</strong>
+            <b>Ühenda tehisaru API rakendusega</b>
+            <small>Saada R-is arvutatud tulemus Gemini API-le ja kontrolli mudeli vastust.</small>
+            <em>≈ 20 min</em>
+          </span>
+        </label>
+      </div>
+
+      <div class="start-panel">
+        <div><span>VALITUD</span><strong id="selectedLabel">API 1 · Saada päring. Loe vastust.</strong></div>
+        <a class="start-button" id="startButton" href="./api1/"><span>Alusta API 1</span><i aria-hidden="true">→</i></a>
+      </div>
+    </section>
+
+    <footer><span>Andmepädevuse API õpiteekond</span><a href="https://github.com/siimkl/API">GitHubi lähtekood</a></footer>
+  </main>
+  <script src="landing.js"></script>
+</body>
+</html>
