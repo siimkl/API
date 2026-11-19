@@ -99,6 +99,7 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
                 method: document.querySelector('.site-footer').textContent.includes('Spec-driven · AI-supported coding'),
                 workflow: document.querySelector('.footer-workflow strong')?.textContent.trim(),
                 note: Boolean(document.querySelector('.site-footer .footer-note')),
+                footerWidth: Math.round(document.querySelector('.site-footer').getBoundingClientRect().width),
                 footerGap: Math.round(document.documentElement.scrollHeight - (document.querySelector('.site-footer').getBoundingClientRect().bottom + scrollY)),
                 overflow: document.documentElement.scrollWidth > document.documentElement.clientWidth
               };
@@ -147,6 +148,7 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
           method: document.querySelector('.site-footer').textContent.includes('Spec-driven · AI-supported coding'),
           workflow: document.querySelector('.footer-workflow strong').textContent.trim(),
           note: Boolean(document.querySelector('.site-footer .footer-note')),
+          footerWidth: Math.round(document.querySelector('.site-footer').getBoundingClientRect().width),
           overflow: document.documentElement.scrollWidth > document.documentElement.clientWidth
         })"""))
         assert landing == {
@@ -162,6 +164,7 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
             "method": True,
             "workflow": "GitHub · GitHub Actions · GitHub Pages",
             "note": True,
+            "footerWidth": 1360,
             "overflow": False,
         }, landing
         screenshot("launcher-desktop.png")
@@ -291,6 +294,7 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
         assert all(item["model"] and item["method"] for item in headers), headers
         assert all(item["workflow"] == "GitHub · GitHub Actions · GitHub Pages" for item in headers), headers
         assert all(item["note"] for item in headers), headers
+        assert all(item["footerWidth"] == landing["footerWidth"] for item in headers), {"landing": landing["footerWidth"], "practicums": [item["footerWidth"] for item in headers]}
         assert all(item["footerGap"] <= 40 for item in headers), headers
         assert all(item["mission"] == "PRAKTIKUMI EDENEMINE" for item in headers), headers
         assert all(item["completed"] == "0" and not item["overflow"] for item in headers), headers
@@ -308,8 +312,8 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
         command("Emulation.setDeviceMetricsOverride", {"width": 390, "height": 844, "deviceScaleFactor": 1, "mobile": True})
         command("Page.reload", {"ignoreCache": True})
         time.sleep(0.7)
-        mobile = json.loads(evaluate("JSON.stringify({width:innerWidth,overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth,cards:document.querySelectorAll('.api-card').length,selected:document.querySelector('input:checked').value,footerColumns:getComputedStyle(document.querySelector('.footer-details')).gridTemplateColumns.split(' ').length,footerNote:Boolean(document.querySelector('.site-footer .footer-note'))})"))
-        assert mobile == {"width": 390, "overflow": False, "cards": 3, "selected": "api1", "footerColumns": 1, "footerNote": True}, mobile
+        mobile = json.loads(evaluate("JSON.stringify({width:innerWidth,overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth,cards:document.querySelectorAll('.api-card').length,selected:document.querySelector('input:checked').value,footerColumns:getComputedStyle(document.querySelector('.footer-details')).gridTemplateColumns.split(' ').length,footerNote:Boolean(document.querySelector('.site-footer .footer-note')),footerWidth:Math.round(document.querySelector('.site-footer').getBoundingClientRect().width)})"))
+        assert mobile == {"width": 390, "overflow": False, "cards": 3, "selected": "api1", "footerColumns": 1, "footerNote": True, "footerWidth": 374}, mobile
         screenshot("launcher-mobile.png")
         evaluate("scrollTo(0, document.documentElement.scrollHeight)")
         time.sleep(0.3)
@@ -321,6 +325,7 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
             wait_for_path(f"/api{number}/")
             mobile_headers.append(header_state())
         assert all(not item["overflow"] for item in mobile_headers), mobile_headers
+        assert all(item["footerWidth"] == mobile["footerWidth"] for item in mobile_headers), {"landing": mobile["footerWidth"], "practicums": [item["footerWidth"] for item in mobile_headers]}
         assert len({item["headingSize"] for item in mobile_headers}) == 1, mobile_headers
         assert len({item["subtitleSize"] for item in mobile_headers}) == 1, mobile_headers
         screenshot("api3-header-mobile.png")
