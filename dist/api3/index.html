@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="API 3 interaktiivne õpirakendus: tehisaru API-de ühendamine enda rakendusega ning Statistikaameti andmete tõlgendamine Gemini API abil.">
   <title>API 3 · Tehisaru API-de ühendamine enda rakendusega</title>
-  <link rel="stylesheet" href="styles.css?v=58">
+  <link rel="stylesheet" href="styles.css?v=59">
   <link rel="stylesheet" href="../api-common.css?v=1">
 </head>
 <body>
@@ -211,6 +211,22 @@ cat(paste(tekst, collapse = <span class="str">"\n"</span>))</code></pre>
         <p>Tee valikud rippmenüüdest. Paremal tekib reaalajas viiesammuline töövoog ja kasutajale kuvatava tulemuse visuaalne näide.</p>
       </header>
 
+      <div class="practice-launchpad">
+        <div class="learning-mission">
+          <span class="section-kicker">SINU MISSIOON</span>
+          <h3>AI peab täitma ühe selge ülesande – vastutus jääb inimesele.</h3>
+          <ul><li>Vali sobiv ja lubatud sisend</li><li>Piira mudeli rolli ja väljundit</li><li>Lisa kontroll ning tõrkeplaan</li></ul>
+        </div>
+        <div class="preset-panel">
+          <div><span class="section-kicker">ALUSTA NÄITEST VÕI EHITA ISE</span><p>Näide täidab valikud. Muuda vähemalt üht otsust ja vaata, kuidas skoor ning visuaal reageerivad.</p></div>
+          <div class="preset-grid">
+            <button type="button" data-planner-preset="statistics"><span>DATA</span><b>Statistika selgitaja</b><small>API → AI → kontroll</small></button>
+            <button type="button" data-planner-preset="survey"><span>TXT</span><b>Tagasiside teemastaja</b><small>Vorm → liigitus → erandid</small></button>
+            <button type="button" data-planner-preset="documents"><span>DOC</span><b>Dokumendiväljade eraldaja</b><small>Failid → JSON → kinnitus</small></button>
+          </div>
+        </div>
+      </div>
+
       <div class="planner-grid">
         <form class="planner-form card" id="workflowPlanner">
           <section class="planner-section">
@@ -254,6 +270,16 @@ cat(paste(tekst, collapse = <span class="str">"\n"</span>))</code></pre>
 
         <article class="workflow-preview card" aria-live="polite">
           <div class="preview-head"><div><span class="section-kicker">VÄLJUND · 5 SAMMU</span><h3>Sinu töövoo visand</h3></div><span class="exercise-state" id="plannerState">0 / 11 valikut</span></div>
+          <section class="quality-dashboard" aria-labelledby="qualityTitle">
+            <div class="quality-score"><strong id="qualityScore">0</strong><span>/ 100</span><small id="qualityTitle">VALMIDUS</small></div>
+            <div class="quality-dimensions">
+              <div><span>Selgus</span><i><b id="clarityBar"></b></i><strong id="clarityScore">0</strong></div>
+              <div><span>Andmekaitse</span><i><b id="privacyBar"></b></i><strong id="privacyScore">0</strong></div>
+              <div><span>Kontroll</span><i><b id="controlBar"></b></i><strong id="controlScore">0</strong></div>
+              <div><span>Töökindlus</span><i><b id="reliabilityBar"></b></i><strong id="reliabilityScore">0</strong></div>
+            </div>
+            <p id="qualityHint">Alusta kasutusjuhust ja määra AI-le üks piiratud roll.</p>
+          </section>
           <ol class="workflow-diagram" id="workflowDiagram">
             <li><span>1</span><div><b>Käivitus ja keskkond</b><small id="previewTrigger">Vali kasutusjuht, käivitaja ja keskkond</small></div></li>
             <li><span>2</span><div><b>Andmed</b><small id="previewSource">Määra allikas ja andmete tundlikkus</small></div></li>
@@ -266,9 +292,26 @@ cat(paste(tekst, collapse = <span class="str">"\n"</span>))</code></pre>
             <div class="output-canvas is-empty" id="outputCanvas"><div class="output-empty"><span aria-hidden="true">◇</span><b>Visuaal tekib siia</b><small>Vali kasutusjuht ja tulemuse visuaal.</small></div></div>
             <div class="output-meta"><span id="visualFormat">Vorming valimata</span><span id="visualModel">Mudel valimata</span></div>
           </section>
+          <details class="request-blueprint">
+            <summary><span>API-PÄRINGU VISAND</span><b>Kuidas valikud muutuvad päringuks?</b></summary>
+            <pre id="plannerRequest">POST [vali mudel või API]
+Content-Type: application/json
+Authorization: [REDACTED]
+
+{
+  "task": "vali AI piiratud ülesanne",
+  "response_format": "vali vorming"
+}</pre>
+            <p><b>Õppevisand.</b> Tegelik otspunkt, autentimine ja parameetrid sõltuvad valitud teenuse dokumentatsioonist. API-võtit ei panda brauserikoodi.</p>
+          </details>
           <div class="planner-summary" id="plannerSummary">Tee valikud. Skeem ja tulemuse visuaal uuenevad automaatselt; nupuga saad valmis töövoo kinnitada.</div>
           <div class="decision-checks" aria-label="Töövoo kvaliteedikontroll"><span id="privacyCheck">○ Määra andmete tundlikkus</span><span id="structureCheck">○ Määra vastuse vorming</span><span id="reviewCheck">○ Määra inimkontroll</span><span id="resilienceCheck">○ Määra tõrkeplaan</span></div>
         </article>
+        <section class="stress-lab" aria-labelledby="stressTitle">
+          <div><span class="section-kicker">LÕPUKATSE · MIS SIIS, KUI?</span><h4 id="stressTitle">Pane oma töövoog proovile</h4><p>Vali tõrkeolukord. Tagasiside kasutab sinu praeguseid kontrolli-, vormingu- ja varuplaani valikuid ning soovitab vajaduse korral parandust.</p></div>
+          <label><span>Testolukord</span><select id="stressInput"><option value="">Vali olukord</option><option value="rate-limit">AI API vastab „429 Too Many Requests”</option><option value="invalid-output">Mudeli vastus ei vasta oodatud vormingule</option><option value="personal-data">Sisend sisaldab ootamatult isikuandmeid</option><option value="model-outage">AI teenus ei ole ajutiselt saadaval</option><option value="low-confidence">Mudeli vastuse kindlus on madal</option></select></label>
+          <div class="stress-result pending" id="stressResult"><span>○</span><div><b>Vali testolukord</b><p>Siin näed, kas kavandatud kontroll ja varuplaan aitavad.</p></div></div>
+        </section>
       </div>
     </section>
 
@@ -319,6 +362,6 @@ cat(paste(tekst, collapse = <span class="str">"\n"</span>))</code></pre>
   </dialog>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="../api-nav.js"></script>
-  <script src="app.js?v=58"></script>
+  <script src="app.js?v=59"></script>
 </body>
 </html>

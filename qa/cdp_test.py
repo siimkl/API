@@ -214,7 +214,10 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
             visual: outputCanvas.className,
             bars: outputCanvas.querySelectorAll('.mini-bars i').length,
             checks: document.querySelectorAll('.decision-checks .good').length,
-            summaryGood: plannerSummary.classList.contains('good')
+            summaryGood: plannerSummary.classList.contains('good'),
+            quality: qualityScore.textContent.trim(),
+            presets: document.querySelectorAll('[data-planner-preset]').length,
+            request: plannerRequest.textContent.includes('/v1beta/models/gemini:generateContent')
           };
         })())"""))
         assert planner == {
@@ -223,6 +226,9 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
             "bars": 3,
             "checks": 4,
             "summaryGood": False,
+            "quality": "100",
+            "presets": 3,
+            "request": True,
         }, planner
         evaluate("buildWorkflow.click(); practiceSuite.scrollIntoView({block:'start'})")
         time.sleep(0.4)
@@ -238,6 +244,28 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
           }));
         })())"""))
         assert all(visual_variants.values()), visual_variants
+
+        learning_features = json.loads(evaluate("""JSON.stringify((() => {
+          stressInput.value = 'rate-limit';
+          stressInput.dispatchEvent(new Event('change', {bubbles:true}));
+          const stressWorks = stressResult.classList.contains('good');
+          document.querySelector('[data-planner-preset="documents"]').click();
+          return {
+            stressWorks,
+            activePreset: document.querySelector('[data-planner-preset].active')?.dataset.plannerPreset,
+            useCase: useCaseInput.value,
+            quality: qualityScore.textContent.trim(),
+            request: plannerRequest.textContent.includes('/v1/chat/completions'),
+            visual: Boolean(outputCanvas.querySelector('.json-visual'))
+          };
+        })())"""))
+        assert learning_features == {"stressWorks": True, "activePreset": "documents", "useCase": "documents", "quality": "98", "request": True, "visual": True}, learning_features
+        evaluate("practiceSuite.scrollIntoView({block:'start'})")
+        time.sleep(0.5)
+        screenshot("api3-planner-learning.png")
+        evaluate("document.querySelector('.stress-lab').scrollIntoView({block:'center'})")
+        time.sleep(0.5)
+        screenshot("api3-planner-stress.png")
 
         headers = [api1, api2, api3_header]
         assert all(item["heading"] == "API päringust vastuseni" for item in headers), headers
@@ -288,8 +316,11 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
         assert mobile_planner == {"columns": 1, "bars": 3, "overflow": False, "canvasFits": True}, mobile_planner
         time.sleep(0.6)
         screenshot("api3-planner-mobile.png")
+        evaluate("practiceSuite.scrollIntoView({block:'start'})")
+        time.sleep(0.6)
+        screenshot("api3-planner-learning-mobile.png")
 
-        print(json.dumps({"landing": landing, "changed": changed, "headers": headers, "sharedStyles": shared_styles, "planner": planner, "visualVariants": visual_variants, "mobile": mobile, "mobileHeaders": mobile_headers, "mobilePlanner": mobile_planner}, indent=2))
+        print(json.dumps({"landing": landing, "changed": changed, "headers": headers, "sharedStyles": shared_styles, "planner": planner, "visualVariants": visual_variants, "learningFeatures": learning_features, "mobile": mobile, "mobileHeaders": mobile_headers, "mobilePlanner": mobile_planner}, indent=2))
     finally:
         try:
             ws.close()

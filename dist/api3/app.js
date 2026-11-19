@@ -822,6 +822,23 @@
     }
   };
 
+  const plannerPresets = {
+    statistics: {
+      name: "Statistika selgitaja",
+      values: { useCaseInput: "statistics", environmentInput: "r", triggerInput: "button", sourceInput: "statistics-api", sensitivityInput: "public", aiRoleInput: "explain", modelInput: "gemini", formatInput: "json", visualInput: "chart", controlInput: "facts", fallbackInput: "retry" }
+    },
+    survey: {
+      name: "Tagasiside teemastaja",
+      values: { useCaseInput: "survey", environmentInput: "automation", triggerInput: "form", sourceInput: "form", sensitivityInput: "personal", aiRoleInput: "classify", modelInput: "azure", formatInput: "schema", visualInput: "table", controlInput: "exceptions", fallbackInput: "queue" }
+    },
+    documents: {
+      name: "Dokumendiväljade eraldaja",
+      values: { useCaseInput: "documents", environmentInput: "python", triggerInput: "batch", sourceInput: "documents", sensitivityInput: "internal", aiRoleInput: "extract", modelInput: "local", formatInput: "schema", visualInput: "json", controlInput: "approve", fallbackInput: "manual" }
+    }
+  };
+
+  let activePlannerPreset = "";
+
   function plannerValue(id) {
     return $(`#${id}`).value.trim();
   }
@@ -835,6 +852,99 @@
     const item = $(`#${id}`);
     item.className = state;
     item.textContent = `${state === "good" ? "✓" : state === "warn" ? "!" : "○"} ${text}`;
+  }
+
+  function updateQuality(values) {
+    const clarity = (values.useCaseInput ? 5 : 0) + (values.aiRoleInput ? 8 : 0) + (values.formatInput ? 6 : 0) + (values.visualInput ? 6 : 0);
+    let privacyFit = 0;
+    if (values.sensitivityInput === "public") privacyFit = 10;
+    if (values.sensitivityInput === "internal") privacyFit = ["local", "azure"].includes(values.modelInput) ? 8 : 5;
+    if (values.sensitivityInput === "personal") privacyFit = ["local", "azure"].includes(values.modelInput) ? 6 : 2;
+    if (values.sensitivityInput === "sensitive") privacyFit = values.modelInput === "local" ? 4 : 0;
+    const privacy = (values.sourceInput ? 5 : 0) + (values.sensitivityInput ? 5 : 0) + (values.modelInput ? 5 : 0) + privacyFit;
+    const strongControl = ["approve", "facts", "owner"].includes(values.controlInput);
+    const control = (values.controlInput ? 10 : 0) + (values.formatInput ? 5 : 0) + (strongControl ? 7 : values.controlInput ? 5 : 0) + (values.modelInput ? 3 : 0);
+    const reliability = (values.fallbackInput ? 10 : 0) + (values.triggerInput ? 5 : 0) + (values.environmentInput ? 5 : 0) + (values.modelInput ? 5 : 0);
+    const dimensions = { clarity, privacy, control, reliability };
+    Object.entries(dimensions).forEach(([key, score]) => {
+      $(`#${key}Score`).textContent = String(score);
+      $(`#${key}Bar`).style.width = `${score * 4}%`;
+    });
+    const total = Object.values(dimensions).reduce((sum, score) => sum + score, 0);
+    const scoreElement = $("#qualityScore");
+    scoreElement.textContent = String(total);
+    scoreElement.parentElement.className = `quality-score ${total >= 85 ? "strong" : total >= 55 ? "developing" : "starting"}`;
+    scoreElement.parentElement.style.setProperty("--quality", `${total}%`);
+
+    const labels = { clarity: "selgus", privacy: "andmekaitse", control: "kontroll", reliability: "töökindlus" };
+    const weakest = Object.entries(dimensions).sort((a, b) => a[1] - b[1])[0][0];
+    let hint = `Järgmine arengukoht on ${labels[weakest]}.`;
+    if (values.sensitivityInput === "sensitive") hint = "Tundlikud isikuandmed vajavad eraldi õiguslikku ja turbeanalüüsi – kõrge skoor üksi ei anna kasutusluba.";
+    else if (total >= 90) hint = "Tugev visand. Katseta nüüd allpool üht tõrkeolukorda ja vaata, kas plaan peab vastu.";
+    else if (!values.aiRoleInput) hint = "Sõnasta AI-le üks piiratud tegevus: liigita, eralda, võta kokku või selgita.";
+    $("#qualityHint").textContent = hint;
+    return total;
+  }
+
+  function updateRequestBlueprint(values) {
+    const endpoints = {
+      gemini: ["POST /v1beta/models/gemini:generateContent", "x-goog-api-key: [REDACTED]"],
+      openai: ["POST /v1/responses", "Authorization: Bearer [REDACTED]"],
+      anthropic: ["POST /v1/messages", "x-api-key: [REDACTED]"],
+      azure: ["POST /openai/deployments/{deployment}/responses", "api-key: [REDACTED]"],
+      local: ["POST /v1/chat/completions", "Authorization: Bearer [LOCAL TOKEN]"]
+    };
+    const [endpoint, authorization] = endpoints[values.modelInput] || ["POST [vali mudel või API]", "Authorization: [REDACTED]"];
+    const requestBody = {
+      model: values.modelInput || "vali mudel",
+      task: plannerLabel("aiRoleInput", "vali AI piiratud ülesanne"),
+      source: plannerLabel("sourceInput", "vali andmeallikas"),
+      response_format: values.formatInput || "vali vorming",
+      human_review: plannerLabel("controlInput", "vali inimkontroll")
+    };
+    $("#plannerRequest").textContent = `${endpoint}\nContent-Type: application/json\n${authorization}\n\n${JSON.stringify(requestBody, null, 2)}`;
+  }
+
+  function renderStressTest(values) {
+    const scenario = $("#stressInput").value;
+    const result = $("#stressResult");
+    let state = "pending";
+    let title = "Vali testolukord";
+    let text = "Siin näed, kas kavandatud kontroll ja varuplaan aitavad.";
+
+    if (scenario === "rate-limit") {
+      const ready = ["retry", "queue", "cache"].includes(values.fallbackInput);
+      state = ready ? "good" : "warn";
+      title = ready ? "Plaan peab vastu" : "Lisa tehniline varuplaan";
+      text = ready ? "Valitud tõrkeplaan väldib päringu lõputut kordamist ja säilitab töövoo kontrolli." : "429 vastus vajab piiratud korduskatseid, järjekorda või viimast kontrollitud tulemust.";
+    } else if (scenario === "invalid-output") {
+      const structured = values.formatInput === "schema";
+      const reviewed = ["approve", "facts", "owner", "exceptions"].includes(values.controlInput);
+      state = structured && reviewed ? "good" : "warn";
+      title = state === "good" ? "Viga avastatakse enne kasutamist" : "Vastus võib märkamatult edasi liikuda";
+      text = state === "good" ? "JSON-skeem tuvastab vormivea ja inimkontroll püüab kinni sisulise vea." : "Kasuta struktureeritud skeemi ning määra, kes vigase või puuduliku vastuse üle vaatab.";
+    } else if (scenario === "personal-data") {
+      const declared = ["personal", "sensitive"].includes(values.sensitivityInput);
+      const protectedModel = ["local", "azure"].includes(values.modelInput);
+      state = declared && protectedModel && Boolean(values.controlInput) ? "good" : "warn";
+      title = state === "good" ? "Risk on vähemalt nähtav" : "Peata saatmine ja hinda andmekaitset";
+      text = state === "good" ? "Tundlikkus, teenusevalik ja inimkontroll on kavandis nähtavad. Enne päriskasutust kontrolli siiski õiguslikku alust ja lepinguid." : "Ootamatu isikuinfo ei tohi automaatselt mudelile liikuda. Lisa tuvastus, minimeerimine ja lubatud teenus.";
+    } else if (scenario === "model-outage") {
+      const ready = ["manual", "queue", "cache"].includes(values.fallbackInput);
+      state = ready ? "good" : "warn";
+      title = ready ? "Töö saab kontrollitult jätkuda" : "Töövoog jääb seisma";
+      text = ready ? "Valitud varuplaan säilitab töö, kuni mudeliteenus taastub." : "Pelgalt veateavitus või korduskatse ei pruugi piisata. Määra käsitsi töö, järjekord või kontrollitud vahetulemus.";
+    } else if (scenario === "low-confidence") {
+      const reviewed = ["approve", "facts", "exceptions", "owner"].includes(values.controlInput);
+      state = reviewed ? "good" : "warn";
+      title = reviewed ? "Ebakindel tulemus jõuab inimeseni" : "Madal kindlus vajab eskaleerimist";
+      text = reviewed ? "Valitud kontroll sobib ebakindlate juhtumite peatamiseks või ülevaatamiseks." : "Lisa reegel, mis suunab madala kindlusega vastused inimesele, mitte automaatsele kasutamisele.";
+    }
+
+    result.className = `stress-result ${state}`;
+    result.querySelector("span").textContent = state === "good" ? "✓" : state === "warn" ? "!" : "○";
+    result.querySelector("b").textContent = title;
+    result.querySelector("p").textContent = text;
   }
 
   function renderOutputVisual(values, built = false) {
@@ -877,6 +987,9 @@
     $("#previewControl").textContent = [plannerLabel("controlInput", "Kontroll valimata"), plannerLabel("fallbackInput", "varuplaan valimata")].join(" · ");
 
     renderOutputVisual(values, showResult);
+    const totalScore = updateQuality(values);
+    updateRequestBlueprint(values);
+    renderStressTest(values);
     const sensitive = values.sensitivityInput === "personal" || values.sensitivityInput === "sensitive";
     setDecisionCheck("privacyCheck", values.sensitivityInput ? (sensitive ? "warn" : "good") : "pending", sensitive ? "Isikuandmed vajavad õiguslikku alust ja minimaalset andmehulka" : values.sensitivityInput ? "Andmete tundlikkus on määratud" : "Määra andmete tundlikkus");
     setDecisionCheck("structureCheck", values.formatInput ? "good" : "pending", values.formatInput ? "API vastuse vorming on määratud" : "Määra vastuse vorming");
@@ -885,10 +998,12 @@
 
     const summary = $("#plannerSummary");
     summary.classList.toggle("good", showResult && completedFields === plannerFields.length);
-    if (!showResult) {
+    if (!showResult && activePlannerPreset) {
+      summary.textContent = `Näidis „${plannerPresets[activePlannerPreset].name}” on laaditud. Muuda vähemalt üht otsust ning jälgi, kuidas skoor, API-päring ja tõrketest reageerivad.`;
+    } else if (!showResult) {
       summary.textContent = "Tee valikud. Skeem ja tulemuse visuaal uuenevad automaatselt; nupuga saad valmis töövoo kinnitada.";
     } else if (completedFields === plannerFields.length) {
-      summary.textContent = `Valmis. ${plannerLabel("environmentInput", "Valitud keskkond")} käivitab töövoo: ${plannerLabel("sourceInput", "andmeallikas")} → ${plannerLabel("modelInput", "AI API")} → ${plannerLabel("visualInput", "tulemuse vaade")} → ${plannerLabel("controlInput", "inimkontroll")}.`;
+      summary.textContent = `Valmis. Valmidusskoor on ${totalScore}/100. ${plannerLabel("environmentInput", "Valitud keskkond")} käivitab töövoo: ${plannerLabel("sourceInput", "andmeallikas")} → ${plannerLabel("modelInput", "AI API")} → ${plannerLabel("visualInput", "tulemuse vaade")} → ${plannerLabel("controlInput", "inimkontroll")}.`;
     } else {
       summary.textContent = `Visand on pooleli: tee veel ${plannerFields.length - completedFields} valikut. Terviklik töövoog vajab sisendit, piiratud AI rolli, väljundit, inimkontrolli ja tõrkeplaani.`;
     }
@@ -897,7 +1012,20 @@
 
   function resetPlanner() {
     $("#workflowPlanner").reset();
+    $("#stressInput").value = "";
+    activePlannerPreset = "";
+    $$('[data-planner-preset]').forEach((button) => button.classList.remove("active"));
     updatePlannerPreview(false);
+  }
+
+  function applyPlannerPreset(key) {
+    const preset = plannerPresets[key];
+    if (!preset) return;
+    activePlannerPreset = key;
+    Object.entries(preset.values).forEach(([id, value]) => { $(`#${id}`).value = value; });
+    $$('[data-planner-preset]').forEach((button) => button.classList.toggle("active", button.dataset.plannerPreset === key));
+    updatePlannerPreview(false);
+    $("#workflowPlanner").scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   function reset() {
@@ -958,7 +1086,17 @@
   els.prevLesson.addEventListener("click", () => showStep(currentStep - 1, true));
   els.nextLesson.addEventListener("click", () => showStep(currentStep + 1, true));
   $("#resetButton").addEventListener("click", reset);
-  plannerFields.forEach((id) => $(`#${id}`).addEventListener("change", () => updatePlannerPreview(false)));
+  plannerFields.forEach((id) => $(`#${id}`).addEventListener("change", () => {
+    activePlannerPreset = "";
+    $$('[data-planner-preset]').forEach((button) => button.classList.remove("active"));
+    updatePlannerPreview(false);
+  }));
+  $$('[data-planner-preset]').forEach((button) => button.addEventListener("click", () => applyPlannerPreset(button.dataset.plannerPreset)));
+  $("#stressInput").addEventListener("change", () => {
+    const values = Object.fromEntries(plannerFields.map((id) => [id, plannerValue(id)]));
+    renderStressTest(values);
+    syncHeight();
+  });
   $("#buildWorkflow").addEventListener("click", () => updatePlannerPreview(true));
   $("#clearWorkflow").addEventListener("click", resetPlanner);
   els.modelGuide.addEventListener("click", () => {
