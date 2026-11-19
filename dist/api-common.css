@@ -241,6 +241,11 @@
   line-height: 1.45;
 }
 
+.site-footer .footer-workflow span b {
+  color: #102f55;
+  font-weight: 800;
+}
+
 .site-footer .footer-note {
   grid-column: 2;
   display: flex;

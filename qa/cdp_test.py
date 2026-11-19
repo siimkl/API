@@ -95,6 +95,7 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
                 subtitleSize: getComputedStyle(subtitle).fontSize,
                 mission: document.querySelector('.mission-label').textContent.trim(),
                 completed: document.querySelector('#completedCount').textContent.trim(),
+                workflow: document.querySelector('.footer-workflow strong')?.textContent.trim(),
                 overflow: document.documentElement.scrollWidth > document.documentElement.clientWidth
               };
             })())"""))
@@ -137,6 +138,7 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
           selected: document.querySelector('input[name="api-version"]:checked').value,
           startText: startButton.textContent.replace(/\\s+/g, ' ').trim(),
           startHref: startButton.getAttribute('href'),
+          workflow: document.querySelector('footer').textContent.includes('VS Code · OpenAI Codex · OpenAI mudelid · GitHub · GitHub Pages'),
           overflow: document.documentElement.scrollWidth > document.documentElement.clientWidth
         })"""))
         assert landing == {
@@ -147,6 +149,7 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
             "selected": "api1",
             "startText": "Alusta 1. praktikumist→",
             "startHref": "./api1/",
+            "workflow": True,
             "overflow": False,
         }, landing
         screenshot("launcher-desktop.png")
@@ -269,6 +272,7 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
 
         headers = [api1, api2, api3_header]
         assert all(item["heading"] == "API päringust vastuseni" for item in headers), headers
+        assert all(item["workflow"] == "VS Code → Codex → GitHub → GitHub Pages" for item in headers), headers
         assert all(item["mission"] == "PRAKTIKUMI EDENEMINE" for item in headers), headers
         assert all(item["completed"] == "0" and not item["overflow"] for item in headers), headers
         assert len({item["headingSize"] for item in headers}) == 1, headers
