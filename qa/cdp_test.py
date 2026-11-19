@@ -131,6 +131,8 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
 
         landing = json.loads(evaluate("""JSON.stringify({
           title: document.title,
+          heroTitle: document.querySelector('.hero-grid h1').textContent.trim(),
+          chooseTitle: document.querySelector('#chooseTitle').textContent.trim(),
           cards: document.querySelectorAll('.api-card').length,
           selected: document.querySelector('input[name="api-version"]:checked').value,
           startText: startButton.textContent.replace(/\\s+/g, ' ').trim(),
@@ -139,9 +141,11 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
         })"""))
         assert landing == {
             "title": "Andmepädevus · API-praktikumid",
+            "heroTitle": "Vali praktikum, millest alustada.",
+            "chooseTitle": "Millise praktikumi valid?",
             "cards": 3,
             "selected": "api1",
-            "startText": "Alusta API 1→",
+            "startText": "Alusta 1. praktikumist→",
             "startHref": "./api1/",
             "overflow": False,
         }, landing
@@ -149,7 +153,7 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
 
         evaluate("document.querySelector('input[value=\"api3\"]').click()")
         changed = json.loads(evaluate("JSON.stringify({text:startButton.textContent.replace(/\\s+/g,' ').trim(),href:startButton.getAttribute('href'),label:selectedLabel.textContent})"))
-        assert changed["text"] == "Alusta API 3→" and changed["href"] == "./api3/", changed
+        assert changed["text"] == "Alusta 3. praktikumist→" and changed["href"] == "./api3/", changed
 
         command("Page.navigate", {"url": URL + "api1/"})
         wait_for_path("/api1/")
