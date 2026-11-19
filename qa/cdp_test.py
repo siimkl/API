@@ -215,8 +215,7 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
           });
           return {
             state: plannerState.textContent.trim(),
-            visual: outputCanvas.className,
-            bars: outputCanvas.querySelectorAll('.mini-bars i').length,
+            visualSectionRemoved: !document.querySelector('.output-visual'),
             checks: document.querySelectorAll('.decision-checks .good').length,
             summaryGood: plannerSummary.classList.contains('good'),
             quality: qualityScore.textContent.trim(),
@@ -226,8 +225,7 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
         })())"""))
         assert planner == {
             "state": "11 / 11 valikut",
-            "visual": "output-canvas visual-chart",
-            "bars": 3,
+            "visualSectionRemoved": True,
             "checks": 4,
             "summaryGood": False,
             "quality": "100",
@@ -236,18 +234,8 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
         }, planner
         evaluate("buildWorkflow.click(); practiceSuite.scrollIntoView({block:'start'})")
         time.sleep(0.4)
-        assert evaluate("plannerSummary.classList.contains('good') && outputCanvas.classList.contains('is-built')")
-        screenshot("api3-planner-chart.png")
-
-        visual_variants = json.loads(evaluate("""JSON.stringify((() => {
-          const expected = {kpi:'.kpi-visual', chart:'.chart-visual', table:'.table-visual', notification:'.notification-visual', summary:'.summary-visual', json:'.json-visual'};
-          return Object.fromEntries(Object.entries(expected).map(([value, selector]) => {
-            visualInput.value = value;
-            visualInput.dispatchEvent(new Event('change', {bubbles:true}));
-            return [value, Boolean(outputCanvas.querySelector(selector))];
-          }));
-        })())"""))
-        assert all(visual_variants.values()), visual_variants
+        assert evaluate("plannerSummary.classList.contains('good') && !document.querySelector('.output-visual')")
+        screenshot("api3-planner-workflow.png")
 
         learning_features = json.loads(evaluate("""JSON.stringify((() => {
           stressInput.value = 'rate-limit';
@@ -259,11 +247,10 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
             activePreset: document.querySelector('[data-planner-preset].active')?.dataset.plannerPreset,
             useCase: useCaseInput.value,
             quality: qualityScore.textContent.trim(),
-            request: plannerRequest.textContent.includes('/v1/chat/completions'),
-            visual: Boolean(outputCanvas.querySelector('.json-visual'))
+            request: plannerRequest.textContent.includes('/v1/chat/completions')
           };
         })())"""))
-        assert learning_features == {"stressWorks": True, "activePreset": "documents", "useCase": "documents", "quality": "98", "request": True, "visual": True}, learning_features
+        assert learning_features == {"stressWorks": True, "activePreset": "documents", "useCase": "documents", "quality": "98", "request": True}, learning_features
         evaluate("practiceSuite.scrollIntoView({block:'start'})")
         time.sleep(0.5)
         screenshot("api3-planner-learning.png")
@@ -309,22 +296,22 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
           useCaseInput.dispatchEvent(new Event('change', {bubbles:true}));
           visualInput.value = 'chart';
           visualInput.dispatchEvent(new Event('change', {bubbles:true}));
-          outputCanvas.scrollIntoView({block:'center'});
+          workflowDiagram.scrollIntoView({block:'center'});
           return {
             columns: getComputedStyle(document.querySelector('.planner-grid')).gridTemplateColumns.split(' ').length,
-            bars: outputCanvas.querySelectorAll('.mini-bars i').length,
             overflow: document.documentElement.scrollWidth > document.documentElement.clientWidth,
-            canvasFits: outputCanvas.getBoundingClientRect().width <= innerWidth
+            previewFits: document.querySelector('.workflow-preview').getBoundingClientRect().width <= innerWidth,
+            visualSectionRemoved: !document.querySelector('.output-visual')
           };
         })())"""))
-        assert mobile_planner == {"columns": 1, "bars": 3, "overflow": False, "canvasFits": True}, mobile_planner
+        assert mobile_planner == {"columns": 1, "overflow": False, "previewFits": True, "visualSectionRemoved": True}, mobile_planner
         time.sleep(0.6)
         screenshot("api3-planner-mobile.png")
         evaluate("practiceSuite.scrollIntoView({block:'start'})")
         time.sleep(0.6)
         screenshot("api3-planner-learning-mobile.png")
 
-        print(json.dumps({"landing": landing, "changed": changed, "headers": headers, "sharedStyles": shared_styles, "planner": planner, "visualVariants": visual_variants, "learningFeatures": learning_features, "mobile": mobile, "mobileHeaders": mobile_headers, "mobilePlanner": mobile_planner}, indent=2))
+        print(json.dumps({"landing": landing, "changed": changed, "headers": headers, "sharedStyles": shared_styles, "planner": planner, "learningFeatures": learning_features, "mobile": mobile, "mobileHeaders": mobile_headers, "mobilePlanner": mobile_planner}, indent=2))
     finally:
         try:
             ws.close()

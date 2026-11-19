@@ -742,86 +742,6 @@
     "fallbackInput"
   ];
 
-  const scenarioVisuals = {
-    statistics: {
-      title: "Keskmise brutopalga muutus",
-      metric: "+11,8%",
-      detail: "2024 II kv → 2026 II kv",
-      bars: [62, 76, 91],
-      labels: ["2024", "2025", "2026"],
-      rows: [["2024 II kv", "2 007 €"], ["2025 II kv", "2 126 €"], ["2026 II kv", "2 243 €"]],
-      message: "Palgamuutuse selgitus ootab sisulist kontrolli.",
-      summary: "Keskmine brutokuupalk suurenes kahe aastaga 236 euro ehk 11,8%. Andmed ei näita muutuse põhjust.",
-      json: { change_eur: 236, change_pct: 11.8, review: "required" }
-    },
-    survey: {
-      title: "Vastuste teemad",
-      metric: "4 teemat",
-      detail: "128 avatud vastust",
-      bars: [84, 63, 47],
-      labels: ["Teenindus", "Hind", "Tarne"],
-      rows: [["Teenindus", "46"], ["Hind", "35"], ["Tarne", "27"]],
-      message: "Uued teemad ja erandid ootavad ülevaatamist.",
-      summary: "AI koondas vastused nelja teemasse. Haruldased ja ebaselged vastused jäid inimese kontrolljärjekorda.",
-      json: { themes: 4, responses: 128, exceptions: 20 }
-    },
-    documents: {
-      title: "Eraldatud väljad",
-      metric: "23 välja",
-      detail: "12 dokumenti",
-      bars: [92, 81, 68],
-      labels: ["Nimi", "Kuupäev", "Summa"],
-      rows: [["Nimi", "12/12"], ["Kuupäev", "11/12"], ["Summa", "10/12"]],
-      message: "Kahe dokumendi väljad vajavad käsitsi kontrolli.",
-      summary: "Dokumentidest eraldati valitud väljad. Madala kindlusega väärtused suunati inimesele.",
-      json: { documents: 12, extracted_fields: 23, review_items: 2 }
-    },
-    support: {
-      title: "Päringute suunamine",
-      metric: "87%",
-      detail: "automaatselt liigitatud",
-      bars: [87, 72, 58],
-      labels: ["Arveldus", "Tehniline", "Muu"],
-      rows: [["Arveldus", "42"], ["Tehniline", "31"], ["Muu", "15"]],
-      message: "11 ebaselget päringut ootavad teenindaja otsust.",
-      summary: "Enamik päringuid sai esialgse kategooria. Ebaselged juhtumid jäid inimesele.",
-      json: { classified_pct: 87, manual_queue: 11, status: "review" }
-    },
-    meetings: {
-      title: "Koosoleku tegevused",
-      metric: "6 tegevust",
-      detail: "3 vastutajat",
-      bars: [78, 62, 46],
-      labels: ["Selge", "Tähtaeg", "Omanik"],
-      rows: [["Tegevused", "6"], ["Tähtajad", "5"], ["Vastutajad", "3"]],
-      message: "Koosoleku kokkuvõte ootab osaleja kinnitust.",
-      summary: "Märkmetest leiti kuus tegevust. Enne jagamist kontrollib koosoleku omanik vastutajad ja tähtajad.",
-      json: { actions: 6, owners: 3, approval: "pending" }
-    },
-    content: {
-      title: "Tootekirjelduste mustandid",
-      metric: "12 mustandit",
-      detail: "avaldamata",
-      bars: [82, 69, 54],
-      labels: ["Valmis", "Kontroll", "Täiendus"],
-      rows: [["Valmis", "7"], ["Kontrollis", "3"], ["Täiendada", "2"]],
-      message: "Mustandid ootavad tooteomaniku heakskiitu.",
-      summary: "AI koostas tooteandmetest mustandid. Faktid ja toon kontrollitakse enne avaldamist.",
-      json: { drafts: 12, approved: 0, publish: false }
-    },
-    other: {
-      title: "Töövoo tulemus",
-      metric: "Valmis",
-      detail: "ootab kontrolli",
-      bars: [74, 61, 49],
-      labels: ["Sisend", "AI", "Kontroll"],
-      rows: [["Sisend", "Saadud"], ["AI", "Töödeldud"], ["Kontroll", "Ootel"]],
-      message: "Tulemus on loodud ja ootab vastutaja kontrolli.",
-      summary: "AI täitis piiratud ülesande. Tulemust ei kasutata enne kokkulepitud inimkontrolli.",
-      json: { result: "ready", human_review: true }
-    }
-  };
-
   const plannerPresets = {
     statistics: {
       name: "Statistika selgitaja",
@@ -947,35 +867,6 @@
     result.querySelector("p").textContent = text;
   }
 
-  function renderOutputVisual(values, built = false) {
-    const canvas = $("#outputCanvas");
-    const scenario = scenarioVisuals[values.useCaseInput] || scenarioVisuals.other;
-    const visual = values.visualInput;
-    canvas.className = `output-canvas ${visual ? `visual-${visual}` : "is-empty"}${built ? " is-built" : ""}`;
-    $("#visualKind").textContent = plannerLabel("visualInput", "Vali vaade");
-    $("#visualFormat").textContent = plannerLabel("formatInput", "Vorming valimata");
-    $("#visualModel").textContent = plannerLabel("modelInput", "Mudel valimata");
-
-    if (!values.useCaseInput || !visual) {
-      canvas.innerHTML = '<div class="output-empty"><span aria-hidden="true">◇</span><b>Visuaal tekib siia</b><small>Vali kasutusjuht ja tulemuse visuaal.</small></div>';
-      return;
-    }
-
-    if (visual === "kpi") {
-      canvas.innerHTML = `<div class="kpi-visual"><span>${scenario.title}</span><strong>${scenario.metric}</strong><small>${scenario.detail}</small><em>Kontrollimata AI-väljund</em></div>`;
-    } else if (visual === "chart") {
-      canvas.innerHTML = `<div class="chart-visual"><div class="visual-title"><b>${scenario.title}</b><span>${scenario.detail}</span></div><div class="mini-bars">${scenario.bars.map((height, index) => `<div><strong>${height}</strong><i style="--mini-height:${height}%"></i><span>${scenario.labels[index]}</span></div>`).join("")}</div></div>`;
-    } else if (visual === "table") {
-      canvas.innerHTML = `<div class="table-visual"><b>${scenario.title}</b><table><thead><tr><th>Rühm</th><th>Väärtus</th></tr></thead><tbody>${scenario.rows.map((row) => `<tr><td>${row[0]}</td><td>${row[1]}</td></tr>`).join("")}</tbody></table></div>`;
-    } else if (visual === "notification") {
-      canvas.innerHTML = `<div class="notification-visual"><span aria-hidden="true">AI</span><div><small>TULEMUS ON VALMIS</small><b>${scenario.message}</b><p>${scenario.detail}</p></div></div>`;
-    } else if (visual === "summary") {
-      canvas.innerHTML = `<div class="summary-visual"><small>AI KOKKUVÕTE</small><h5>${scenario.title}</h5><p>${scenario.summary}</p><span>Vajab inimkontrolli</span></div>`;
-    } else {
-      canvas.innerHTML = `<div class="json-visual"><div><span></span><span></span><span></span><b>result.json</b></div><pre>${JSON.stringify(scenario.json, null, 2)}</pre></div>`;
-    }
-  }
-
   function updatePlannerPreview(showResult = false) {
     const values = Object.fromEntries(plannerFields.map((id) => [id, plannerValue(id)]));
     const completedFields = Object.values(values).filter(Boolean).length;
@@ -986,7 +877,6 @@
     $("#previewOutput").textContent = [plannerLabel("formatInput", "Vorming valimata"), plannerLabel("visualInput", "vaade valimata")].join(" · ");
     $("#previewControl").textContent = [plannerLabel("controlInput", "Kontroll valimata"), plannerLabel("fallbackInput", "varuplaan valimata")].join(" · ");
 
-    renderOutputVisual(values, showResult);
     const totalScore = updateQuality(values);
     updateRequestBlueprint(values);
     renderStressTest(values);
@@ -1001,7 +891,7 @@
     if (!showResult && activePlannerPreset) {
       summary.textContent = `Näidis „${plannerPresets[activePlannerPreset].name}” on laaditud. Muuda vähemalt üht otsust ning jälgi, kuidas skoor, API-päring ja tõrketest reageerivad.`;
     } else if (!showResult) {
-      summary.textContent = "Tee valikud. Skeem ja tulemuse visuaal uuenevad automaatselt; nupuga saad valmis töövoo kinnitada.";
+      summary.textContent = "Tee valikud. Skeem, valmidusskoor ja API-päringu visand uuenevad automaatselt; nupuga saad valmis töövoo kinnitada.";
     } else if (completedFields === plannerFields.length) {
       summary.textContent = `Valmis. Valmidusskoor on ${totalScore}/100. ${plannerLabel("environmentInput", "Valitud keskkond")} käivitab töövoo: ${plannerLabel("sourceInput", "andmeallikas")} → ${plannerLabel("modelInput", "AI API")} → ${plannerLabel("visualInput", "tulemuse vaade")} → ${plannerLabel("controlInput", "inimkontroll")}.`;
     } else {
