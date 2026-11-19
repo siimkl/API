@@ -2178,3 +2178,11 @@ footer { padding-top: 24px; }
 .api-version-switch::after{content:"⌄";position:absolute;right:10px;top:50%;color:#234f88;font-size:13px;line-height:1;transform:translateY(-58%);pointer-events:none}
 .api-version-switch select{appearance:none;width:auto;min-width:82px;min-height:34px;margin:0;padding:0 28px 0 10px;border:1px solid #8fb7ce;border-radius:9px;color:#173f73;background:#fff;box-shadow:0 5px 13px rgba(16,47,85,.08);font:800 12px Manrope,system-ui,sans-serif;letter-spacing:.08em;cursor:pointer}
 .api-version-switch select:focus-visible{outline:3px solid rgba(10,167,216,.25);outline-offset:2px}
+
+/* API 3-aligned hero hierarchy. */
+.hero-copy h1.hero-title{max-width:780px;margin:18px 0 10px;font-size:clamp(38px,5.2vw,70px);line-height:.94;letter-spacing:-.055em}
+.hero-copy .hero-subtitle{max-width:850px;margin:0;color:#07979a;font-size:clamp(22px,3vw,38px);font-weight:800;line-height:1.15;letter-spacing:-.035em}
+.hero-copy .hero-description{max-width:760px;margin-top:18px;color:#344f68;font-size:16px;line-height:1.65}
+.progress-meta{display:flex;justify-content:space-between;margin-top:10px;color:#405b72;font-size:11px}
+.progress-meta b{color:#056f72}
+@media(max-width:680px){.hero-copy h1.hero-title{font-size:clamp(34px,10.5vw,48px)}.hero-copy .hero-subtitle{font-size:24px}.hero-copy .hero-description{font-size:14px}}

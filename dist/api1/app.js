@@ -6,7 +6,7 @@
   const wait = (ms) => new Promise(resolve => window.setTimeout(resolve, ms));
 
   const els = {
-    progressValue: $("#progressValue"), progressText: $("#progressText"), progressBar: $("#progressBar"),
+    progressValue: $("#progressValue"), progressText: $("#progressText"), progressBar: $("#progressBar"), completedCount: $("#completedCount"),
     resetButton: $("#resetButton"),
     stageCard: $(".stage-card"), controlCard: $(".control-card"), flowStatus: $("#flowStatus"), storyIndex: $("#storyIndex"), storyText: $("#storyText"),
     flowDialog: $("#flowDialog"), flowDialogKicker: $("#flowDialogKicker"), dialogFlowStage: $("#dialogFlowStage"), dialogFlowStatus: $("#dialogFlowStatus"),
@@ -243,6 +243,7 @@
     els.progressValue.textContent = `${percent}%`;
     els.progressText.textContent = labels[step];
     els.progressBar.style.width = `${percent}%`;
+    els.completedCount.textContent = completed ? "4" : String(Math.max(0, step - 1));
     $$(".step").forEach(item => {
       const n = Number(item.dataset.step);
       const done = n < step || (completed && n === 4);
