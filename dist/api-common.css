@@ -152,6 +152,8 @@
 }
 
 /* One footer system; long API 1/2 notes remain, but no longer form a second visual language. */
+body { padding-bottom: 0; }
+
 .site-footer {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);

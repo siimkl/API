@@ -98,6 +98,7 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
                 model: document.querySelector('.site-footer').textContent.includes('VS Code · OpenAI Codex · GPT-5.6 Sol · Extra High'),
                 method: document.querySelector('.site-footer').textContent.includes('Spec-driven · AI-supported coding'),
                 workflow: document.querySelector('.footer-workflow strong')?.textContent.trim(),
+                footerGap: Math.round(document.documentElement.scrollHeight - (document.querySelector('.site-footer').getBoundingClientRect().bottom + scrollY)),
                 overflow: document.documentElement.scrollWidth > document.documentElement.clientWidth
               };
             })())"""))
@@ -276,6 +277,7 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
         assert all(item["heading"] == "API päringust vastuseni" for item in headers), headers
         assert all(item["model"] and item["method"] for item in headers), headers
         assert all(item["workflow"] == "GitHub · GitHub Actions · GitHub Pages" for item in headers), headers
+        assert all(item["footerGap"] <= 40 for item in headers), headers
         assert all(item["mission"] == "PRAKTIKUMI EDENEMINE" for item in headers), headers
         assert all(item["completed"] == "0" and not item["overflow"] for item in headers), headers
         assert len({item["headingSize"] for item in headers}) == 1, headers
