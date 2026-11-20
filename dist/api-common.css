@@ -23,6 +23,48 @@
 }
 
 /* Shared visual language for all three API practicums. */
+.api-home-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 0 11px;
+  border: 1px solid #8fb7ce;
+  border-radius: 9px;
+  color: #173f73;
+  background: #fff;
+  box-shadow: 0 5px 13px rgba(16, 47, 85, .08);
+  font: 800 12px "Manrope", system-ui, sans-serif;
+  letter-spacing: .1em;
+  text-decoration: none;
+  transition: border-color .16s ease, box-shadow .16s ease, color .16s ease, transform .16s ease;
+}
+
+.api-home-link:hover {
+  border-color: #2f60a0;
+  color: #102f55;
+  box-shadow: 0 7px 17px rgba(16, 47, 85, .14);
+  transform: translateY(-1px);
+}
+
+.api-home-link:focus-visible {
+  outline: 3px solid rgba(10, 167, 216, .3);
+  outline-offset: 2px;
+}
+
+.api-home-link[aria-current="page"] {
+  border-color: #2f60a0;
+  background: #f5fbff;
+}
+
+.brand .brand-suffix {
+  width: auto;
+  height: auto;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
 .hero-copy h1.hero-title {
   max-width: 780px;
   margin: 18px 0 10px;

@@ -101,6 +101,8 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
                 note: Boolean(document.querySelector('.site-footer .footer-note')),
                 footerWidth: Math.round(document.querySelector('.site-footer').getBoundingClientRect().width),
                 footerGap: Math.round(document.documentElement.scrollHeight - (document.querySelector('.site-footer').getBoundingClientRect().bottom + scrollY)),
+                homeHref: document.querySelector('.api-home-link').getAttribute('href'),
+                homeLabel: document.querySelector('.api-home-link').textContent.trim(),
                 overflow: document.documentElement.scrollWidth > document.documentElement.clientWidth
               };
             })())"""))
@@ -149,6 +151,8 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
           workflow: document.querySelector('.footer-workflow strong').textContent.trim(),
           note: Boolean(document.querySelector('.site-footer .footer-note')),
           footerWidth: Math.round(document.querySelector('.site-footer').getBoundingClientRect().width),
+          homeHref: document.querySelector('.api-home-link').getAttribute('href'),
+          homeLabel: document.querySelector('.api-home-link').textContent.trim(),
           overflow: document.documentElement.scrollWidth > document.documentElement.clientWidth
         })"""))
         assert landing == {
@@ -165,6 +169,8 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
             "workflow": "GitHub · GitHub Actions · GitHub Pages",
             "note": True,
             "footerWidth": 1360,
+            "homeHref": "./",
+            "homeLabel": "ANDMEPÄDEVUS",
             "overflow": False,
         }, landing
         screenshot("launcher-desktop.png")
@@ -181,6 +187,7 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
         wait_for_path("/api1/")
         assert evaluate("document.querySelector('.api-version-select').value") == "../api1/"
         assert "ANDMEPÄDEVUS ·" in evaluate("document.querySelector('.api-eyebrow').textContent")
+        assert evaluate("document.querySelector('.api-home-link').getAttribute('href')") == "../"
         api1 = header_state()
         api1_style = shared_style_state()
         assert evaluate("Boolean(document.querySelector('.next-action-guide.contextual.next-target'))")
@@ -297,6 +304,7 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
         assert all(item["footerWidth"] == landing["footerWidth"] for item in headers), {"landing": landing["footerWidth"], "practicums": [item["footerWidth"] for item in headers]}
         assert all(item["footerGap"] <= 40 for item in headers), headers
         assert all(item["mission"] == "PRAKTIKUMI EDENEMINE" for item in headers), headers
+        assert all(item["homeHref"] == "../" and item["homeLabel"] == "ANDMEPÄDEVUS" for item in headers), headers
         assert all(item["completed"] == "0" and not item["overflow"] for item in headers), headers
         assert len({item["headingSize"] for item in headers}) == 1, headers
         assert len({item["headingLineHeight"] for item in headers}) == 1, headers
