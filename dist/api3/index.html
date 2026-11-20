@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="API 3 interaktiivne õpirakendus: tehisaru API-de ühendamine enda rakendusega ning Statistikaameti andmete tõlgendamine Gemini API abil.">
   <title>API 3 · Tehisaru API-de ühendamine enda rakendusega</title>
-  <link rel="stylesheet" href="styles.css?v=63">
+  <link rel="stylesheet" href="styles.css?v=64">
   <link rel="stylesheet" href="../api-common.css?v=7">
 </head>
 <body>
@@ -172,6 +172,86 @@ vastus_ai &lt;- request(<span class="str">"https://generativelanguage.googleapis
       </section>
     </section>
 
+    <section class="sequence-exercise locked" id="sequenceExercise" aria-labelledby="sequenceTitle" aria-disabled="true">
+      <header class="practice-suite-head sequence-exercise-head">
+        <div><span class="section-kicker">JÄRJESTAMISHARJUTUS · EHITA SKEEM</span><h2 id="sequenceTitle">Pane API-töövoog õigesse järjekorda</h2></div>
+        <p>Lohista töövooplokid loogiliseks protsessiks. Seejärel vali igas plokis tegevus, mis sobib selle sammu ülesandega.</p>
+      </header>
+
+      <div class="sequence-layout">
+        <aside class="sequence-brief card">
+          <span class="section-kicker">KAKS OTSUST KORRAGA</span>
+          <h3>Järjesta ja täpsusta</h3>
+          <p>Hea töövoog algab käivitajast, liigub andmete ning töötlemise kaudu mudelini ja lõpeb kasutajale arusaadava tulemusega.</p>
+          <ol>
+            <li><span>1</span><div><b>Muuda järjekorda</b><small>Lohista plokki või kasuta nuppe „Üles” ja „Alla”.</small></div></li>
+            <li><span>2</span><div><b>Tee plokis valik</b><small>Vali rippmenüüst selle sammu õige tegevus.</small></div></li>
+            <li><span>3</span><div><b>Jälgi tagasisidet</b><small>Skoor uueneb pärast iga liigutust ja valikut.</small></div></li>
+          </ol>
+          <button class="secondary-button" id="resetSequence" type="button">Alusta uuesti</button>
+        </aside>
+
+        <article class="sequence-board card" aria-live="polite">
+          <div class="sequence-board-head">
+            <div><span class="section-kicker">SINU PROTSESSI SKEEM</span><h3>Tõsta plokid üksteise alla</h3></div>
+            <span class="exercise-state" id="sequenceState">0 / 5 õiges kohas · 0 / 5 valikut</span>
+          </div>
+          <div class="sequence-progress" aria-hidden="true"><span id="sequenceProgress"></span></div>
+
+          <div class="sequence-stack" id="sequenceStack" role="list" aria-label="Järjestatav API-töövoog">
+            <article class="sequence-block" data-flow-key="source" draggable="true" role="listitem">
+              <span class="sequence-grip" aria-hidden="true">⠿</span>
+              <div class="sequence-block-body">
+                <div class="sequence-block-title"><span class="block-order">1</span><div><small>ANDMED</small><b>Andmete küsimine</b></div></div>
+                <label><span>Mis selles sammus toimub?</span><select data-answer="statistics-post"><option value="">Vali tegevus</option><option value="statistics-post">Statistikaameti API tagastab valitud andmed</option><option value="show-result">Kasutajale näidatakse lõpptulemust</option><option value="ask-ai">Keelemudelile saadetakse tõlgendusülesanne</option></select></label>
+              </div>
+              <div class="sequence-move"><button type="button" data-sequence-move="up">Üles</button><button type="button" data-sequence-move="down">Alla</button></div>
+            </article>
+
+            <article class="sequence-block" data-flow-key="output" draggable="true" role="listitem">
+              <span class="sequence-grip" aria-hidden="true">⠿</span>
+              <div class="sequence-block-body">
+                <div class="sequence-block-title"><span class="block-order">2</span><div><small>TULEMUS</small><b>Vastuse kuvamine</b></div></div>
+                <label><span>Mis selles sammus toimub?</span><select data-answer="show-result"><option value="">Vali tegevus</option><option value="calculate-change">R arvutab väärtuste muutuse</option><option value="show-result">Kasutaja näeb AI vastust koos lähteandmetega</option><option value="start-button">Kasutaja käivitab töövoo</option></select></label>
+              </div>
+              <div class="sequence-move"><button type="button" data-sequence-move="up">Üles</button><button type="button" data-sequence-move="down">Alla</button></div>
+            </article>
+
+            <article class="sequence-block" data-flow-key="trigger" draggable="true" role="listitem">
+              <span class="sequence-grip" aria-hidden="true">⠿</span>
+              <div class="sequence-block-body">
+                <div class="sequence-block-title"><span class="block-order">3</span><div><small>ALGUS</small><b>Töövoo käivitamine</b></div></div>
+                <label><span>Mis selles sammus toimub?</span><select data-answer="start-button"><option value="">Vali tegevus</option><option value="ask-ai">Gemini API koostab tõlgenduse</option><option value="start-button">Kasutaja vajutab andmete analüüsimise nuppu</option><option value="statistics-post">Statistikaamet tagastab andmed</option></select></label>
+              </div>
+              <div class="sequence-move"><button type="button" data-sequence-move="up">Üles</button><button type="button" data-sequence-move="down">Alla</button></div>
+            </article>
+
+            <article class="sequence-block" data-flow-key="ai" draggable="true" role="listitem">
+              <span class="sequence-grip" aria-hidden="true">⠿</span>
+              <div class="sequence-block-body">
+                <div class="sequence-block-title"><span class="block-order">4</span><div><small>AI API</small><b>Tõlgenduse küsimine</b></div></div>
+                <label><span>Mis selles sammus toimub?</span><select data-answer="ask-ai"><option value="">Vali tegevus</option><option value="show-result">Brauser kuvab valmis vastuse</option><option value="ask-ai">Gemini API-le saadetakse arvud ja piiratud ülesanne</option><option value="calculate-change">R arvutab muutuse</option></select></label>
+              </div>
+              <div class="sequence-move"><button type="button" data-sequence-move="up">Üles</button><button type="button" data-sequence-move="down">Alla</button></div>
+            </article>
+
+            <article class="sequence-block" data-flow-key="transform" draggable="true" role="listitem">
+              <span class="sequence-grip" aria-hidden="true">⠿</span>
+              <div class="sequence-block-body">
+                <div class="sequence-block-title"><span class="block-order">5</span><div><small>R-TÖÖTLUS</small><b>Arvutamine ja ettevalmistus</b></div></div>
+                <label><span>Mis selles sammus toimub?</span><select data-answer="calculate-change"><option value="">Vali tegevus</option><option value="start-button">Kasutaja käivitab töövoo</option><option value="calculate-change">R arvutab muutuse ja koostab mudeli sisendi</option><option value="show-result">Kasutajale kuvatakse lõpptulemus</option></select></label>
+              </div>
+              <div class="sequence-move"><button type="button" data-sequence-move="up">Üles</button><button type="button" data-sequence-move="down">Alla</button></div>
+            </article>
+          </div>
+
+          <div class="sequence-feedback pending" id="sequenceFeedback">
+            <span aria-hidden="true">1</span><div><b>Alusta töövoo algusest</b><p>Leia kõigepealt sündmus, mis protsessi käivitab. Seejärel liiguta andmete ja töötlemise sammud õigesse kohta.</p></div>
+          </div>
+        </article>
+      </div>
+    </section>
+
     <section class="practice-suite locked" id="practiceSuite" aria-labelledby="practiceTitle" aria-disabled="true">
       <header class="practice-suite-head">
         <div><span class="section-kicker">ISESEISEV HARJUTUS · API 3 SLAIDID</span><h2 id="practiceTitle">Kavanda kontrollitud AI API töövoog</h2></div>
@@ -298,6 +378,6 @@ vastus_ai &lt;- request(<span class="str">"https://generativelanguage.googleapis
   </dialog>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="../api-nav.js"></script>
-  <script src="app.js?v=64"></script>
+  <script src="app.js?v=65"></script>
 </body>
 </html>

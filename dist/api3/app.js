@@ -160,6 +160,7 @@
     selectionFeedback: $("#selectionFeedback"),
     selectionAction: $("#selectionAction"),
     modelGuide: $("#modelGuide"),
+    sequenceExercise: $("#sequenceExercise"),
     practiceSuite: $("#practiceSuite"),
     flowDialog: $("#flowDialog"),
     flowDialogKicker: $("#flowDialogKicker"),
@@ -714,6 +715,8 @@
     }
     if (step === 4) {
       completeFlowDialog(dialogConfigs[step]);
+      els.sequenceExercise.classList.remove("locked");
+      els.sequenceExercise.removeAttribute("aria-disabled");
       els.practiceSuite.classList.remove("locked");
       els.practiceSuite.removeAttribute("aria-disabled");
     }
@@ -731,6 +734,70 @@
       showStep(step + 1);
     }
     syncHeight();
+  }
+
+  const sequenceCorrectOrder = ["trigger", "source", "transform", "ai", "output"];
+  const sequenceInitialOrder = ["source", "output", "trigger", "ai", "transform"];
+  let draggedSequenceBlock = null;
+
+  function sequenceBlocks() {
+    return $$(".sequence-block", $("#sequenceStack"));
+  }
+
+  function updateSequenceExercise() {
+    const blocks = sequenceBlocks();
+    let positionsCorrect = 0;
+    let choicesCorrect = 0;
+
+    blocks.forEach((block, index) => {
+      const select = $("select", block);
+      const positionCorrect = block.dataset.flowKey === sequenceCorrectOrder[index];
+      const choiceCorrect = select.value === select.dataset.answer;
+      if (positionCorrect) positionsCorrect += 1;
+      if (choiceCorrect) choicesCorrect += 1;
+      $(".block-order", block).textContent = String(index + 1);
+      block.classList.toggle("position-correct", positionCorrect);
+      select.classList.toggle("choice-correct", choiceCorrect);
+      select.classList.toggle("choice-wrong", Boolean(select.value) && !choiceCorrect);
+      const upButton = $('[data-sequence-move="up"]', block);
+      const downButton = $('[data-sequence-move="down"]', block);
+      upButton.disabled = index === 0;
+      downButton.disabled = index === blocks.length - 1;
+    });
+
+    const solved = positionsCorrect === sequenceCorrectOrder.length && choicesCorrect === sequenceCorrectOrder.length;
+    const score = positionsCorrect + choicesCorrect;
+    $("#sequenceState").textContent = `${positionsCorrect} / 5 õiges kohas · ${choicesCorrect} / 5 valikut`;
+    $("#sequenceProgress").style.width = `${score * 10}%`;
+
+    const feedback = $("#sequenceFeedback");
+    feedback.className = `sequence-feedback ${solved ? "complete" : positionsCorrect === 5 ? "choices" : "pending"}`;
+    feedback.querySelector("span").textContent = solved ? "✓" : positionsCorrect === 5 ? "2" : "1";
+    feedback.querySelector("b").textContent = solved ? "Loogiline töövoog on valmis" : positionsCorrect === 5 ? "Järjestus on paigas" : "Ehita protsess algusest lõpuni";
+    feedback.querySelector("p").textContent = solved
+      ? "Käivitaja, andmed, R-töötlus, AI API ja kasutajale kuvatav tulemus moodustavad tervikliku protsessi."
+      : positionsCorrect === 5
+        ? "Nüüd vali igas plokis tegevus, mis vastab selle sammu ülesandele."
+        : "Töövoog algab käivitajast. Andmed tuleb kätte saada ja töödelda enne, kui arvud saadetakse keelemudelile.";
+    syncHeight();
+  }
+
+  function moveSequenceBlock(block, direction) {
+    const stack = $("#sequenceStack");
+    if (direction === "up" && block.previousElementSibling) stack.insertBefore(block, block.previousElementSibling);
+    if (direction === "down" && block.nextElementSibling) stack.insertBefore(block.nextElementSibling, block);
+    updateSequenceExercise();
+  }
+
+  function resetSequenceExercise() {
+    const stack = $("#sequenceStack");
+    const byKey = Object.fromEntries(sequenceBlocks().map((block) => [block.dataset.flowKey, block]));
+    sequenceInitialOrder.forEach((key) => stack.append(byKey[key]));
+    sequenceBlocks().forEach((block) => {
+      $("select", block).value = "";
+      block.classList.remove("dragging", "drop-target");
+    });
+    updateSequenceExercise();
   }
 
   const plannerFields = [
@@ -877,6 +944,8 @@
     els.flowApi.classList.remove("active");
     els.flowMap.classList.remove("sending", "returning");
     els.modelGuide.hidden = true;
+    els.sequenceExercise.classList.add("locked");
+    els.sequenceExercise.setAttribute("aria-disabled", "true");
     els.practiceSuite.classList.add("locked");
     els.practiceSuite.setAttribute("aria-disabled", "true");
     els.indicatorSelect.selectedIndex = 0;
@@ -885,6 +954,7 @@
       input.checked = defaultPeriods.has(input.value);
     });
     updateRequestPreview();
+    resetSequenceExercise();
     resetPlanner();
     activateTab("consolePanel");
     updateProgress();
@@ -907,6 +977,50 @@
   els.prevLesson.addEventListener("click", () => showStep(currentStep - 1, true));
   els.nextLesson.addEventListener("click", () => showStep(currentStep + 1, true));
   $("#resetButton").addEventListener("click", reset);
+  $("#sequenceStack").addEventListener("dragstart", (event) => {
+    const block = event.target.closest(".sequence-block");
+    if (!block || event.target.closest("select, button")) {
+      event.preventDefault();
+      return;
+    }
+    draggedSequenceBlock = block;
+    block.classList.add("dragging");
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData("text/plain", block.dataset.flowKey);
+  });
+  $("#sequenceStack").addEventListener("dragover", (event) => {
+    if (!draggedSequenceBlock) return;
+    event.preventDefault();
+    const target = event.target.closest(".sequence-block");
+    $$(".sequence-block.drop-target").forEach((block) => block.classList.remove("drop-target"));
+    if (target && target !== draggedSequenceBlock) target.classList.add("drop-target");
+  });
+  $("#sequenceStack").addEventListener("drop", (event) => {
+    if (!draggedSequenceBlock) return;
+    event.preventDefault();
+    const target = event.target.closest(".sequence-block");
+    if (target && target !== draggedSequenceBlock) {
+      const afterTarget = event.clientY > target.getBoundingClientRect().top + target.offsetHeight / 2;
+      target.parentElement.insertBefore(draggedSequenceBlock, afterTarget ? target.nextElementSibling : target);
+    }
+    updateSequenceExercise();
+  });
+  $("#sequenceStack").addEventListener("dragend", () => {
+    sequenceBlocks().forEach((block) => block.classList.remove("dragging", "drop-target"));
+    draggedSequenceBlock = null;
+    updateSequenceExercise();
+  });
+  $("#sequenceStack").addEventListener("click", (event) => {
+    const button = event.target.closest("[data-sequence-move]");
+    if (!button) return;
+    const block = button.closest(".sequence-block");
+    moveSequenceBlock(block, button.dataset.sequenceMove);
+    button.focus({ preventScroll: true });
+  });
+  $("#sequenceStack").addEventListener("change", (event) => {
+    if (event.target.matches("select")) updateSequenceExercise();
+  });
+  $("#resetSequence").addEventListener("click", resetSequenceExercise);
   plannerFields.forEach((id) => $(`#${id}`).addEventListener("change", updatePlannerPreview));
   $("#stressInput").addEventListener("change", () => {
     const values = Object.fromEntries(plannerFields.map((id) => [id, plannerValue(id)]));
@@ -944,6 +1058,7 @@
   updateRequestPreview();
   updateProgress();
   showStep(1);
+  updateSequenceExercise();
   updatePlannerPreview();
   window.setTimeout(syncHeight, 100);
 })();

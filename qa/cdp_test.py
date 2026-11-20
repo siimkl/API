@@ -281,6 +281,7 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
           badge: consoleBadge.textContent.trim(),
           context: responseContextLabel.textContent.trim(),
           responseVisible: !consolePanel.hidden && consoleOutput.textContent.includes('model_output'),
+          sequenceUnlocked: !sequenceExercise.classList.contains('locked') && sequenceExercise.getAttribute('aria-disabled') === null,
           practiceUnlocked: !practiceSuite.classList.contains('locked') && practiceSuite.getAttribute('aria-disabled') === null,
           fifthStepRemoved: !document.querySelector('[data-step="5"], [data-lesson="5"], [data-run="5"]'),
           resultPanelRemoved: !document.querySelector('#resultPanel')
@@ -294,6 +295,7 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
             "badge": "200 OK",
             "context": "GEMINI API VASTUS",
             "responseVisible": True,
+            "sequenceUnlocked": True,
             "practiceUnlocked": True,
             "fifthStepRemoved": True,
             "resultPanelRemoved": True,
@@ -303,6 +305,44 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
         time.sleep(0.3)
         screenshot("api3-footer.png")
         evaluate("scrollTo(0, 0)")
+
+        sequence_exercise = json.loads(evaluate("""JSON.stringify((() => {
+          const stack = document.querySelector('#sequenceStack');
+          const initialOrder = [...stack.children].map(block => block.dataset.flowKey).join(',');
+          stack.querySelector('[data-flow-key="source"] [data-sequence-move="down"]').click();
+          const moveButtonWorks = [...stack.children].map(block => block.dataset.flowKey).join(',') !== initialOrder;
+          resetSequence.click();
+          ['trigger', 'source', 'transform', 'ai', 'output'].forEach(key => stack.append(stack.querySelector(`[data-flow-key="${key}"]`)));
+          [...stack.querySelectorAll('.sequence-block select')].forEach(select => {
+            select.value = select.dataset.answer;
+            select.dispatchEvent(new Event('change', {bubbles:true}));
+          });
+          return {
+            initialOrder,
+            moveButtonWorks,
+            finalOrder: [...stack.children].map(block => block.dataset.flowKey).join(','),
+            state: sequenceState.textContent.trim(),
+            progress: sequenceProgress.style.width,
+            complete: sequenceFeedback.classList.contains('complete'),
+            correctChoices: stack.querySelectorAll('select.choice-correct').length,
+            correctPositions: stack.querySelectorAll('.sequence-block.position-correct').length,
+            feedback: sequenceFeedback.querySelector('b').textContent.trim()
+          };
+        })())"""))
+        assert sequence_exercise == {
+            "initialOrder": "source,output,trigger,ai,transform",
+            "moveButtonWorks": True,
+            "finalOrder": "trigger,source,transform,ai,output",
+            "state": "5 / 5 õiges kohas · 5 / 5 valikut",
+            "progress": "100%",
+            "complete": True,
+            "correctChoices": 5,
+            "correctPositions": 5,
+            "feedback": "Loogiline töövoog on valmis",
+        }, sequence_exercise
+        evaluate("sequenceExercise.scrollIntoView({block:'start'})")
+        time.sleep(0.5)
+        screenshot("api3-sequence-workflow.png")
 
         planner = json.loads(evaluate("""JSON.stringify((() => {
           practiceSuite.classList.remove('locked');
@@ -419,6 +459,23 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
         assert len({item["subtitleSize"] for item in mobile_headers}) == 1, mobile_headers
         screenshot("api3-header-mobile.png")
 
+        mobile_sequence = json.loads(evaluate("""JSON.stringify((() => {
+          sequenceExercise.classList.remove('locked');
+          sequenceExercise.removeAttribute('aria-disabled');
+          sequenceExercise.scrollIntoView({block:'start'});
+          return {
+            columns: getComputedStyle(document.querySelector('.sequence-layout')).gridTemplateColumns.split(' ').length,
+            overflow: document.documentElement.scrollWidth > document.documentElement.clientWidth,
+            boardFits: document.querySelector('.sequence-board').getBoundingClientRect().width <= innerWidth,
+            blocks: document.querySelectorAll('.sequence-block').length,
+            selects: document.querySelectorAll('.sequence-block select').length,
+            moveButtons: document.querySelectorAll('[data-sequence-move]').length
+          };
+        })())"""))
+        assert mobile_sequence == {"columns": 1, "overflow": False, "boardFits": True, "blocks": 5, "selects": 5, "moveButtons": 10}, mobile_sequence
+        time.sleep(0.6)
+        screenshot("api3-sequence-mobile.png")
+
         mobile_planner = json.loads(evaluate("""JSON.stringify((() => {
           practiceSuite.classList.remove('locked');
           useCaseInput.value = 'survey';
@@ -440,7 +497,7 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
         time.sleep(0.6)
         screenshot("api3-planner-learning-mobile.png")
 
-        print(json.dumps({"landing": landing, "changed": changed, "headers": headers, "sharedStyles": shared_styles, "planner": planner, "learningFeatures": learning_features, "mobile": mobile, "mobileHeaders": mobile_headers, "mobilePlanner": mobile_planner}, indent=2))
+        print(json.dumps({"landing": landing, "changed": changed, "headers": headers, "sharedStyles": shared_styles, "sequenceExercise": sequence_exercise, "planner": planner, "learningFeatures": learning_features, "mobile": mobile, "mobileHeaders": mobile_headers, "mobileSequence": mobile_sequence, "mobilePlanner": mobile_planner}, indent=2))
     finally:
         try:
             ws.close()
