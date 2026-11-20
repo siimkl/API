@@ -1116,7 +1116,7 @@ footer b { color: #183f70; }
   letter-spacing: -.04em;
 }
 .flow-dialog-head p { margin: 0; color: #405d75; font-size: 16px; }
-.flow-dialog .flow-stage { min-height: 300px; margin: 22px 0 16px; }
+.flow-dialog .flow-stage { min-height: 300px; margin: 22px 0 40px; }
 .flow-dialog-footer {
   display: flex;
   align-items: center;

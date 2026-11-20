@@ -200,6 +200,9 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
         evaluate("getMetadata.click()")
         time.sleep(0.2)
         assert evaluate("flowDialog.open && getMetadata.disabled")
+        api1_popup_gap = evaluate("Math.round(document.querySelector('.flow-dialog-footer').getBoundingClientRect().top - document.querySelector('.response-path > span').getBoundingClientRect().bottom)")
+        assert api1_popup_gap >= 32, api1_popup_gap
+        screenshot("api1-popup-spacing.png")
 
         evaluate("document.querySelector('.api-version-select').value='../api2/'; document.querySelector('.api-version-select').dispatchEvent(new Event('change',{bubbles:true}))")
         wait_for_path("/api2/")
@@ -216,6 +219,9 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
         evaluate("getMetadata.click()")
         time.sleep(0.2)
         assert evaluate("flowDialog.open && getMetadata.disabled")
+        api2_popup_gap = evaluate("Math.round(document.querySelector('.flow-dialog-footer').getBoundingClientRect().top - document.querySelector('.response-path > span').getBoundingClientRect().bottom)")
+        assert api2_popup_gap >= 32, api2_popup_gap
+        screenshot("api2-popup-spacing.png")
 
         evaluate("document.querySelector('.api-version-select').value='../api3/'; document.querySelector('.api-version-select').dispatchEvent(new Event('change',{bubbles:true}))")
         wait_for_path("/api3/")
@@ -229,8 +235,9 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
 
         evaluate("document.querySelector('[data-run=\"1\"]').click()")
         time.sleep(0.2)
-        popup_gap = evaluate("Math.round(document.querySelector('.flow-dialog-footer').getBoundingClientRect().top - document.querySelector('.dialog-response-path > span').getBoundingClientRect().bottom)")
-        assert popup_gap >= 24, popup_gap
+        api3_popup_gap = evaluate("Math.round(document.querySelector('.flow-dialog-footer').getBoundingClientRect().top - document.querySelector('.dialog-response-path > span').getBoundingClientRect().bottom)")
+        assert api3_popup_gap >= 32, api3_popup_gap
+        screenshot("api3-popup-spacing.png")
         time.sleep(4.7)
         assert evaluate("!flowDialogClose.disabled")
         evaluate("flowDialogClose.click()")
