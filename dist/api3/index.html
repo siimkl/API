@@ -203,7 +203,7 @@ vastus_ai &lt;- request(<span class="str">"https://generativelanguage.googleapis
               <span class="sequence-grip" aria-hidden="true">⠿</span>
               <div class="sequence-block-body">
                 <div class="sequence-block-title"><span class="block-order">1</span><div><small>ANDMED</small><b>Andmete küsimine</b></div></div>
-                <label><span>Mis selles sammus toimub?</span><select data-answer="statistics-post"><option value="">Vali tegevus</option><option value="statistics-post">Statistikaameti API tagastab valitud andmed</option><option value="show-result">Kasutajale näidatakse lõpptulemust</option><option value="ask-ai">Keelemudelile saadetakse tõlgendusülesanne</option></select></label>
+                <label><span>Mis selles sammus toimub?</span><select data-answer="statistics-post"><option value="">Vali tegevus</option><option value="statistics-post">Statistikaameti API tagastab päringuga valitud väärtused</option><option value="show-result">Kasutajale kuvatakse AI vastus ja lähteandmed</option><option value="ask-ai">Gemini API-le saadetakse arvud ja selge ülesanne</option></select></label>
               </div>
               <div class="sequence-move"><button type="button" data-sequence-move="up">Üles</button><button type="button" data-sequence-move="down">Alla</button></div>
             </article>
@@ -212,7 +212,7 @@ vastus_ai &lt;- request(<span class="str">"https://generativelanguage.googleapis
               <span class="sequence-grip" aria-hidden="true">⠿</span>
               <div class="sequence-block-body">
                 <div class="sequence-block-title"><span class="block-order">2</span><div><small>TULEMUS</small><b>Vastuse kuvamine</b></div></div>
-                <label><span>Mis selles sammus toimub?</span><select data-answer="show-result"><option value="">Vali tegevus</option><option value="calculate-change">R arvutab väärtuste muutuse</option><option value="show-result">Kasutaja näeb AI vastust koos lähteandmetega</option><option value="start-button">Kasutaja käivitab töövoo</option></select></label>
+                <label><span>Mis selles sammus toimub?</span><select data-answer="show-result"><option value="">Vali tegevus</option><option value="calculate-change">R arvutab muutuse ja koostab mudeli sisendi</option><option value="show-result">Kasutajale kuvatakse AI vastus, lähteandmed ja arvutus</option><option value="start-button">Kasutaja käivitab töövoo nupuga</option></select></label>
               </div>
               <div class="sequence-move"><button type="button" data-sequence-move="up">Üles</button><button type="button" data-sequence-move="down">Alla</button></div>
             </article>
@@ -221,7 +221,7 @@ vastus_ai &lt;- request(<span class="str">"https://generativelanguage.googleapis
               <span class="sequence-grip" aria-hidden="true">⠿</span>
               <div class="sequence-block-body">
                 <div class="sequence-block-title"><span class="block-order">3</span><div><small>ALGUS</small><b>Töövoo käivitamine</b></div></div>
-                <label><span>Mis selles sammus toimub?</span><select data-answer="start-button"><option value="">Vali tegevus</option><option value="ask-ai">Gemini API koostab tõlgenduse</option><option value="start-button">Kasutaja vajutab andmete analüüsimise nuppu</option><option value="statistics-post">Statistikaamet tagastab andmed</option></select></label>
+                <label><span>Mis selles sammus toimub?</span><select data-answer="start-button"><option value="">Vali tegevus</option><option value="ask-ai">Gemini API-le saadetakse tõlgendusülesanne</option><option value="start-button">Kasutaja käivitab töövoo nupuga</option><option value="statistics-post">Statistikaameti API tagastab valitud väärtused</option></select></label>
               </div>
               <div class="sequence-move"><button type="button" data-sequence-move="up">Üles</button><button type="button" data-sequence-move="down">Alla</button></div>
             </article>
@@ -229,8 +229,8 @@ vastus_ai &lt;- request(<span class="str">"https://generativelanguage.googleapis
             <article class="sequence-block" data-flow-key="ai" draggable="true" role="listitem">
               <span class="sequence-grip" aria-hidden="true">⠿</span>
               <div class="sequence-block-body">
-                <div class="sequence-block-title"><span class="block-order">4</span><div><small>AI API</small><b>Tõlgenduse küsimine</b></div></div>
-                <label><span>Mis selles sammus toimub?</span><select data-answer="ask-ai"><option value="">Vali tegevus</option><option value="show-result">Brauser kuvab valmis vastuse</option><option value="ask-ai">Gemini API-le saadetakse arvud ja piiratud ülesanne</option><option value="calculate-change">R arvutab muutuse</option></select></label>
+                <div class="sequence-block-title"><span class="block-order">4</span><div><small>KEELEMUDELI API</small><b>Tõlgenduse küsimine</b></div></div>
+                <label><span>Mis selles sammus toimub?</span><select data-answer="ask-ai"><option value="">Vali tegevus</option><option value="show-result">Kasutajale kuvatakse AI vastus</option><option value="ask-ai">Gemini API-le saadetakse arvutatud muutus ja selge ülesanne</option><option value="calculate-change">R arvutab muutuse ja koostab mudeli sisendi</option></select></label>
               </div>
               <div class="sequence-move"><button type="button" data-sequence-move="up">Üles</button><button type="button" data-sequence-move="down">Alla</button></div>
             </article>
@@ -239,7 +239,7 @@ vastus_ai &lt;- request(<span class="str">"https://generativelanguage.googleapis
               <span class="sequence-grip" aria-hidden="true">⠿</span>
               <div class="sequence-block-body">
                 <div class="sequence-block-title"><span class="block-order">5</span><div><small>R-TÖÖTLUS</small><b>Arvutamine ja ettevalmistus</b></div></div>
-                <label><span>Mis selles sammus toimub?</span><select data-answer="calculate-change"><option value="">Vali tegevus</option><option value="start-button">Kasutaja käivitab töövoo</option><option value="calculate-change">R arvutab muutuse ja koostab mudeli sisendi</option><option value="show-result">Kasutajale kuvatakse lõpptulemus</option></select></label>
+                <label><span>Mis selles sammus toimub?</span><select data-answer="calculate-change"><option value="">Vali tegevus</option><option value="start-button">Kasutaja käivitab töövoo nupuga</option><option value="calculate-change">R arvutab muutuse ja koostab mudeli sisendi</option><option value="show-result">Kasutajale kuvatakse AI vastus koos lähteandmetega</option></select></label>
               </div>
               <div class="sequence-move"><button type="button" data-sequence-move="up">Üles</button><button type="button" data-sequence-move="down">Alla</button></div>
             </article>
@@ -266,7 +266,7 @@ vastus_ai &lt;- request(<span class="str">"https://generativelanguage.googleapis
             <div class="planner-fields-grid">
               <label class="planner-field planner-wide"><span>Kasutusjuht</span><select id="useCaseInput"><option value="">Vali kasutusjuht</option><option value="statistics">Statistikaandmete muutuse selgitamine</option><option value="survey">Küsitluse vastuste teemastamine</option><option value="documents">Dokumentidest info eraldamine</option><option value="support">Kliendipäringute liigitamine</option><option value="meetings">Koosolekumärkmete kokkuvõte</option><option value="content">Tootekirjelduste mustandid</option><option value="other">Muu kasutusjuht</option></select></label>
               <label class="planner-field"><span>Käivituskeskkond</span><select id="environmentInput"><option value="">Vali keskkond</option><option value="r">R / RStudio</option><option value="python">Python</option><option value="web">Veebirakendus</option><option value="workflow">Töövootööriist (n8n / Make / Zapier)</option><option value="sheets">Google Sheets + Apps Script</option><option value="backend">Serverirakendus</option></select></label>
-              <label class="planner-field"><span>Käivitaja</span><select id="triggerInput"><option value="">Vali käivitus</option><option value="button">Kasutaja vajutab nuppu</option><option value="schedule">Ajastatud töö</option><option value="new-data">Uus andmekirje</option><option value="form">Vormi esitamine</option><option value="batch">Failide hulgilaadimine</option></select></label>
+              <label class="planner-field"><span>Käivitaja</span><select id="triggerInput"><option value="">Vali käivitus</option><option value="button">Kasutaja käivitab töövoo nupuga</option><option value="schedule">Töövoog käivitub määratud ajal</option><option value="new-data">Töövoog käivitub uue andmekirje saabumisel</option><option value="form">Töövoog käivitub vormi esitamisel</option><option value="batch">Kasutaja lisab töötlemiseks failide kogumi</option></select></label>
             </div>
           </section>
 
@@ -274,10 +274,10 @@ vastus_ai &lt;- request(<span class="str">"https://generativelanguage.googleapis
             <div class="planner-number">2</div>
             <div><span class="section-kicker">ANDMED JA AI ROLL</span><h3>Mida saadad ja mida mudel täpselt teeb?</h3></div>
             <div class="planner-fields-grid">
-              <label class="planner-field"><span>Andmeallikas</span><select id="sourceInput"><option value="">Vali andmeallikas</option><option value="statistics-api">Statistikaameti API</option><option value="database-api">Andmebaas või muu API</option><option value="csv">CSV- või Exceli fail</option><option value="form">Veebivormi vastused</option><option value="email">E-kirjad</option><option value="documents">Dokumendikaust</option><option value="crm">CRM või kasutajatugi</option></select></label>
-              <label class="planner-field"><span>Andmete tundlikkus</span><select id="sensitivityInput"><option value="">Vali tundlikkus</option><option value="public">Avalikud andmed</option><option value="internal">Asutusesisesed andmed</option><option value="personal">Isikuandmed</option><option value="sensitive">Tundlikud isikuandmed</option></select></label>
-              <label class="planner-field"><span>AI piiratud ülesanne</span><select id="aiRoleInput"><option value="">Vali üks selge ülesanne</option><option value="explain">Selgitab arvulist muutust</option><option value="classify">Liigitab etteantud kategooriatesse</option><option value="extract">Eraldab kindlad väljad</option><option value="summarize">Võtab sisu kokku</option><option value="draft">Koostab mustandi</option><option value="translate">Tõlgib teksti</option><option value="detect">Tuvastab erandid</option></select></label>
-              <label class="planner-field"><span>Mudel või API</span><select id="modelInput"><option value="">Vali teenus</option><option value="gemini">Gemini API</option><option value="openai">OpenAI API</option><option value="anthropic">Anthropic API</option><option value="azure">Azure OpenAI</option><option value="local">Lokaalne avatud mudel</option></select></label>
+              <label class="planner-field"><span>Andmeallikas</span><select id="sourceInput"><option value="">Vali andmeallikas</option><option value="statistics-api">Statistikaameti API</option><option value="database-api">Andmebaasi või infosüsteemi API</option><option value="csv">CSV- või Exceli fail</option><option value="form">Veebivormi vastused</option><option value="email">E-kirjad meiliteenuse API-st</option><option value="documents">Dokumendid faililaost</option><option value="crm">CRM-i või kasutajatoe API</option></select></label>
+              <label class="planner-field"><span>Andmete tundlikkus</span><select id="sensitivityInput"><option value="">Vali tundlikkus</option><option value="public">Avalikud andmed</option><option value="internal">Asutusesisesed andmed</option><option value="personal">Isikuandmed</option><option value="sensitive">Eriliiki või väga tundlikud isikuandmed</option></select></label>
+              <label class="planner-field"><span>AI piiratud ülesanne</span><select id="aiRoleInput"><option value="">Vali üks selge ülesanne</option><option value="explain">Selgitab muutust etteantud andmete põhjal</option><option value="classify">Liigitab etteantud kategooriatesse</option><option value="extract">Eraldab kokkulepitud väljad</option><option value="summarize">Võtab sisu kokku</option><option value="draft">Koostab inimesele mustandi</option><option value="translate">Tõlgib teksti</option><option value="detect">Tuvastab reeglite järgi erandid</option></select></label>
+              <label class="planner-field"><span>Keelemudeli teenus</span><select id="modelInput"><option value="">Vali teenus</option><option value="gemini">Gemini API (pilvteenus)</option><option value="openai">OpenAI API (pilvteenus)</option><option value="anthropic">Anthropic API (pilvteenus)</option><option value="azure">Azure OpenAI (organisatsiooni pilv)</option><option value="local">Asutuse hallatav lokaalne mudeli-API</option></select></label>
             </div>
           </section>
 
@@ -285,10 +285,10 @@ vastus_ai &lt;- request(<span class="str">"https://generativelanguage.googleapis
             <div class="planner-number">3</div>
             <div><span class="section-kicker">VÄLJUND JA KONTROLL</span><h3>Kuidas tulemus kuvatakse ja kes vastutab?</h3></div>
             <div class="planner-fields-grid">
-              <label class="planner-field"><span>API vastuse vorming</span><select id="formatInput"><option value="">Vali vorming</option><option value="json">JSON</option><option value="schema">Struktureeritud JSON-skeem</option><option value="text">Lihttekst</option><option value="markdown">Markdown</option><option value="table">Tabel</option></select></label>
-              <label class="planner-field"><span>Tulemuse visuaal</span><select id="visualInput"><option value="">Vali kasutajavaade</option><option value="kpi">KPI-kaart</option><option value="chart">Tulpdiagramm</option><option value="table">Tulemuste tabel</option><option value="notification">Teavituskaart</option><option value="summary">Tekstiline kokkuvõte</option><option value="json">JSON-vaade</option></select></label>
-              <label class="planner-field"><span>Inimkontroll</span><select id="controlInput"><option value="">Vali kontroll</option><option value="approve">Inimene kinnitab enne avaldamist</option><option value="facts">Kontrollitakse fakte ja algallikat</option><option value="exceptions">Inimene lahendab ainult erandid</option><option value="sample">Kontrollitakse juhuvalimit</option><option value="owner">Valdkonna omanik kontrollib tulemuse</option></select></label>
-              <label class="planner-field"><span>Tõrke- ja varuplaan</span><select id="fallbackInput"><option value="">Vali varuplaan</option><option value="manual">Ülesanne liigub käsitsi töötlusse</option><option value="retry">Päringut proovitakse piiratud arv kordi uuesti</option><option value="queue">Tulemus jääb kontrolljärjekorda</option><option value="cache">Kuvatakse viimane kontrollitud tulemus</option><option value="notify">Vastutajale saadetakse veateavitus</option></select></label>
+              <label class="planner-field"><span>Mudeli vastuse vorming</span><select id="formatInput"><option value="">Vali vorming</option><option value="json">JSON</option><option value="schema">JSON etteantud skeemi järgi</option><option value="text">Lihttekst</option><option value="markdown">Markdown-tekst</option><option value="table">Markdown-tabel</option></select></label>
+              <label class="planner-field"><span>Tulemuse kasutajavaade</span><select id="visualInput"><option value="">Vali kasutajavaade</option><option value="kpi">Üks põhinäitaja (KPI-kaart)</option><option value="chart">Tulpdiagramm</option><option value="table">Tulemuste tabel</option><option value="notification">Teavituskaart</option><option value="summary">Tekstiline kokkuvõte</option><option value="json">Struktureeritud JSON-vaade</option></select></label>
+              <label class="planner-field"><span>Inimkontroll</span><select id="controlInput"><option value="">Vali kontroll</option><option value="approve">Inimene kinnitab tulemuse enne kasutamist</option><option value="facts">Inimene kontrollib väiteid algallika järgi</option><option value="exceptions">Inimene lahendab ainult erandjuhtumid</option><option value="sample">Inimene kontrollib juhuvalimit</option><option value="owner">Valdkonna omanik kontrollib tulemust</option></select></label>
+              <label class="planner-field"><span>Tõrke- ja varuplaan</span><select id="fallbackInput"><option value="">Vali varuplaan</option><option value="manual">Juhtum suunatakse käsitsi lahendamiseks</option><option value="retry">Ajutise tõrke korral tehakse piiratud korduskatsed</option><option value="queue">Juhtum suunatakse kontrolljärjekorda</option><option value="cache">Kuvatakse ajatempliga viimane kontrollitud tulemus</option><option value="notify">Töö peatatakse ja vastutajat teavitatakse</option></select></label>
             </div>
           </section>
 
@@ -378,6 +378,6 @@ vastus_ai &lt;- request(<span class="str">"https://generativelanguage.googleapis
   </dialog>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="../api-nav.js"></script>
-  <script src="app.js?v=66"></script>
+  <script src="app.js?v=67"></script>
 </body>
 </html>

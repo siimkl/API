@@ -330,7 +330,10 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
             complete: sequenceFeedback.classList.contains('complete'),
             correctChoices: stack.querySelectorAll('select.choice-correct').length,
             correctPositions: stack.querySelectorAll('.sequence-block.position-correct').length,
-            feedback: sequenceFeedback.querySelector('b').textContent.trim()
+            feedback: sequenceFeedback.querySelector('b').textContent.trim(),
+            sourceAnswer: stack.querySelector('[data-flow-key="source"] option[value="statistics-post"]').textContent.trim(),
+            aiAnswer: stack.querySelector('[data-flow-key="ai"] option[value="ask-ai"]').textContent.trim(),
+            outputAnswer: stack.querySelector('[data-flow-key="output"] option[value="show-result"]').textContent.trim()
           };
         })())"""))
         assert sequence_exercise == {
@@ -345,6 +348,9 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
             "correctChoices": 5,
             "correctPositions": 5,
             "feedback": "Loogiline töövoog on valmis",
+            "sourceAnswer": "Statistikaameti API tagastab päringuga valitud väärtused",
+            "aiAnswer": "Gemini API-le saadetakse arvutatud muutus ja selge ülesanne",
+            "outputAnswer": "Kasutajale kuvatakse AI vastus, lähteandmed ja arvutus",
         }, sequence_exercise
         evaluate("sequenceExercise.scrollIntoView({block:'start'})")
         time.sleep(0.5)
@@ -374,7 +380,11 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
             buildButtonRemoved: !document.querySelector('#buildWorkflow'),
             naturalHeading: document.querySelector('.planner-section h3').textContent.trim(),
             useCasePrompt: useCaseInput.options[0].textContent.trim(),
-            workflowTool: environmentInput.querySelector('option[value="workflow"]').textContent.trim()
+            workflowTool: environmentInput.querySelector('option[value="workflow"]').textContent.trim(),
+            sourceApiLabel: sourceInput.querySelector('option[value="database-api"]').textContent.trim(),
+            schemaLabel: formatInput.querySelector('option[value="schema"]').textContent.trim(),
+            localModelLabel: modelInput.querySelector('option[value="local"]').textContent.trim(),
+            cacheLabel: fallbackInput.querySelector('option[value="cache"]').textContent.trim()
           };
         })())"""))
         assert planner == {
@@ -389,10 +399,55 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
             "naturalHeading": "Millise API-töövoo kavandad ja kust see algab?",
             "useCasePrompt": "Vali kasutusjuht",
             "workflowTool": "Töövootööriist (n8n / Make / Zapier)",
+            "sourceApiLabel": "Andmebaasi või infosüsteemi API",
+            "schemaLabel": "JSON etteantud skeemi järgi",
+            "localModelLabel": "Asutuse hallatav lokaalne mudeli-API",
+            "cacheLabel": "Kuvatakse ajatempliga viimane kontrollitud tulemus",
         }, planner
         evaluate("practiceSuite.scrollIntoView({block:'start'})")
         time.sleep(0.4)
         screenshot("api3-planner-workflow.png")
+
+        logic_checks = json.loads(evaluate("""JSON.stringify((() => {
+          const setChoices = choices => Object.entries(choices).forEach(([id, value]) => {
+            const select = document.getElementById(id);
+            select.value = value;
+            select.dispatchEvent(new Event('change', {bubbles:true}));
+          });
+          const coherentScenarios = [
+            {useCaseInput:'statistics', sourceInput:'statistics-api', aiRoleInput:'explain', formatInput:'json', visualInput:'chart'},
+            {useCaseInput:'survey', sourceInput:'form', aiRoleInput:'classify', formatInput:'schema', visualInput:'chart'},
+            {useCaseInput:'documents', sourceInput:'documents', aiRoleInput:'extract', formatInput:'schema', visualInput:'json'},
+            {useCaseInput:'support', sourceInput:'crm', aiRoleInput:'classify', formatInput:'schema', visualInput:'notification'},
+            {useCaseInput:'meetings', sourceInput:'documents', aiRoleInput:'summarize', formatInput:'markdown', visualInput:'summary'},
+            {useCaseInput:'content', sourceInput:'database-api', aiRoleInput:'draft', formatInput:'markdown', visualInput:'summary'}
+          ];
+          const coherentScores = coherentScenarios.map(choices => {
+            setChoices({...choices, sensitivityInput:'public', modelInput:'gemini'});
+            return Number(qualityScore.textContent);
+          });
+
+          setChoices({useCaseInput:'statistics', sourceInput:'statistics-api', aiRoleInput:'draft', formatInput:'markdown', visualInput:'summary', sensitivityInput:'public', modelInput:'gemini'});
+          const roleMismatch = {score:Number(qualityScore.textContent), hint:qualityHint.textContent.trim(), strong:qualityScore.parentElement.classList.contains('strong')};
+
+          setChoices({aiRoleInput:'explain', formatInput:'text', visualInput:'chart'});
+          const formatMismatch = {score:Number(qualityScore.textContent), hint:qualityHint.textContent.trim(), strong:qualityScore.parentElement.classList.contains('strong')};
+
+          setChoices({formatInput:'json', visualInput:'chart', sensitivityInput:'sensitive', modelInput:'gemini'});
+          const sensitiveData = {score:Number(qualityScore.textContent), hint:qualityHint.textContent.trim(), strong:qualityScore.parentElement.classList.contains('strong')};
+
+          setChoices({sensitivityInput:'personal', modelInput:'local', controlInput:'approve'});
+          stressInput.value = 'personal-data';
+          stressInput.dispatchEvent(new Event('change', {bubbles:true}));
+          const personalDataStress = {warn:stressResult.classList.contains('warn'), title:stressResult.querySelector('b').textContent.trim()};
+
+          return {coherentScores, roleMismatch, formatMismatch, sensitiveData, personalDataStress};
+        })())"""))
+        assert logic_checks["coherentScores"] == [100, 100, 100, 100, 100, 100], logic_checks
+        assert logic_checks["roleMismatch"]["score"] < 85 and not logic_checks["roleMismatch"]["strong"] and "ei sobi hästi" in logic_checks["roleMismatch"]["hint"], logic_checks
+        assert logic_checks["formatMismatch"]["score"] < 85 and not logic_checks["formatMismatch"]["strong"] and "usaldusväärselt" in logic_checks["formatMismatch"]["hint"], logic_checks
+        assert logic_checks["sensitiveData"]["score"] < 85 and not logic_checks["sensitiveData"]["strong"] and "õiguslikku alust" in logic_checks["sensitiveData"]["hint"], logic_checks
+        assert logic_checks["personalDataStress"] == {"warn": True, "title": "Peata saatmine ja hinda andmekaitset"}, logic_checks
 
         learning_features = json.loads(evaluate("""JSON.stringify((() => {
           stressInput.value = 'rate-limit';
@@ -415,7 +470,7 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
             quality: qualityScore.textContent.trim()
           };
         })())"""))
-        assert learning_features == {"stressWorks": True, "useCase": "documents", "quality": "98"}, learning_features
+        assert learning_features == {"stressWorks": True, "useCase": "documents", "quality": "93"}, learning_features
         evaluate("practiceSuite.scrollIntoView({block:'start'})")
         time.sleep(0.5)
         screenshot("api3-planner-learning.png")
@@ -503,7 +558,7 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
         time.sleep(0.6)
         screenshot("api3-planner-learning-mobile.png")
 
-        print(json.dumps({"landing": landing, "changed": changed, "headers": headers, "sharedStyles": shared_styles, "sequenceExercise": sequence_exercise, "planner": planner, "learningFeatures": learning_features, "mobile": mobile, "mobileHeaders": mobile_headers, "mobileSequence": mobile_sequence, "mobilePlanner": mobile_planner}, indent=2))
+        print(json.dumps({"landing": landing, "changed": changed, "headers": headers, "sharedStyles": shared_styles, "sequenceExercise": sequence_exercise, "planner": planner, "logicChecks": logic_checks, "learningFeatures": learning_features, "mobile": mobile, "mobileHeaders": mobile_headers, "mobileSequence": mobile_sequence, "mobilePlanner": mobile_planner}, indent=2))
     finally:
         try:
             ws.close()

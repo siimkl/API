@@ -822,14 +822,90 @@
     return select.value ? select.selectedOptions[0].textContent.trim() : fallback;
   }
 
+  const workflowProfiles = {
+    statistics: {
+      roles: ["explain", "detect"],
+      sources: ["statistics-api", "database-api", "csv"],
+      visuals: ["kpi", "chart", "table", "summary"]
+    },
+    survey: {
+      roles: ["classify", "summarize", "detect"],
+      sources: ["form", "csv", "database-api"],
+      visuals: ["chart", "table", "summary"]
+    },
+    documents: {
+      roles: ["extract", "summarize", "classify", "translate"],
+      sources: ["documents", "email", "database-api"],
+      visuals: ["table", "summary", "json"]
+    },
+    support: {
+      roles: ["classify", "draft", "summarize", "translate", "detect"],
+      sources: ["crm", "email", "form", "database-api"],
+      visuals: ["notification", "table", "summary", "json"]
+    },
+    meetings: {
+      roles: ["summarize", "extract"],
+      sources: ["documents", "email", "database-api"],
+      visuals: ["summary", "table", "json"]
+    },
+    content: {
+      roles: ["draft", "translate", "summarize"],
+      sources: ["database-api", "csv", "documents"],
+      visuals: ["summary", "table", "json"]
+    }
+  };
+
+  const roleFormats = {
+    explain: ["json", "schema", "text", "markdown"],
+    classify: ["json", "schema", "table"],
+    extract: ["json", "schema", "table"],
+    summarize: ["text", "markdown", "json", "schema"],
+    draft: ["text", "markdown"],
+    translate: ["text", "markdown", "json", "schema"],
+    detect: ["json", "schema", "table"]
+  };
+
+  const visualFormats = {
+    kpi: ["json", "schema"],
+    chart: ["json", "schema"],
+    table: ["json", "schema", "table"],
+    notification: ["json", "schema", "text"],
+    summary: ["text", "markdown", "json", "schema"],
+    json: ["json", "schema"]
+  };
+
+  function plannerOptionList(id, values) {
+    const labels = values.slice(0, 3).map((value) => $(`#${id} option[value="${value}"]`).textContent.trim());
+    if (labels.length < 2) return labels[0] || "sobiv valik";
+    return `${labels.slice(0, -1).join(", ")} või ${labels.at(-1)}`;
+  }
+
   function updateQuality(values) {
-    const clarity = (values.useCaseInput ? 5 : 0) + (values.aiRoleInput ? 8 : 0) + (values.formatInput ? 6 : 0) + (values.visualInput ? 6 : 0);
-    let privacyFit = 0;
-    if (values.sensitivityInput === "public") privacyFit = 10;
-    if (values.sensitivityInput === "internal") privacyFit = ["local", "azure"].includes(values.modelInput) ? 8 : 5;
-    if (values.sensitivityInput === "personal") privacyFit = ["local", "azure"].includes(values.modelInput) ? 6 : 2;
-    if (values.sensitivityInput === "sensitive") privacyFit = values.modelInput === "local" ? 4 : 0;
-    const privacy = (values.sourceInput ? 5 : 0) + (values.sensitivityInput ? 5 : 0) + (values.modelInput ? 5 : 0) + privacyFit;
+    const profile = workflowProfiles[values.useCaseInput];
+    const roleFits = !profile || !values.aiRoleInput || profile.roles.includes(values.aiRoleInput);
+    const sourceFits = !profile || !values.sourceInput || profile.sources.includes(values.sourceInput);
+    const visualFits = !profile || !values.visualInput || profile.visuals.includes(values.visualInput);
+    const roleFormatFits = !values.aiRoleInput || !values.formatInput || roleFormats[values.aiRoleInput].includes(values.formatInput);
+    const visualFormatFits = !values.visualInput || !values.formatInput || visualFormats[values.visualInput].includes(values.formatInput);
+
+    let clarity = (values.useCaseInput ? 5 : 0) + (values.aiRoleInput ? 8 : 0) + (values.formatInput ? 6 : 0) + (values.visualInput ? 6 : 0);
+    if (!roleFits) clarity -= 7;
+    if (!sourceFits) clarity -= 5;
+    if (!visualFits) clarity -= 4;
+    if (!roleFormatFits) clarity -= 4;
+    if (!visualFormatFits) clarity -= 4;
+    clarity = Math.max(0, clarity);
+    if (![roleFits, sourceFits, visualFits, roleFormatFits, visualFormatFits].every(Boolean)) clarity = Math.min(clarity, 9);
+
+    let privacy = (values.sourceInput ? 3 : 0) + (values.modelInput ? 2 : 0);
+    if (values.sensitivityInput === "public") privacy = (values.sourceInput ? 5 : 0) + 5 + (values.modelInput ? 5 : 0) + 10;
+    if (values.sensitivityInput === "internal") {
+      const serviceFit = values.modelInput === "local" ? 5 : values.modelInput === "azure" ? 3 : 0;
+      privacy = (values.sourceInput ? 4 : 0) + 5 + (values.modelInput ? 4 : 0) + serviceFit;
+    }
+    if (values.sensitivityInput === "personal") privacy = (values.sourceInput ? 2 : 0) + 5 + (values.modelInput ? 2 : 0);
+    if (values.sensitivityInput === "sensitive") privacy = (values.sourceInput ? 1 : 0) + 5 + (values.modelInput ? 1 : 0);
+
     const strongControl = ["approve", "facts", "owner"].includes(values.controlInput);
     const control = (values.controlInput ? 10 : 0) + (values.formatInput ? 5 : 0) + (strongControl ? 7 : values.controlInput ? 5 : 0) + (values.modelInput ? 3 : 0);
     const reliability = (values.fallbackInput ? 10 : 0) + (values.triggerInput ? 5 : 0) + (values.environmentInput ? 5 : 0) + (values.modelInput ? 5 : 0);
@@ -847,9 +923,17 @@
     const labels = { clarity: "selgus", privacy: "andmekaitse", control: "kontroll", reliability: "töökindlus" };
     const weakest = Object.entries(dimensions).sort((a, b) => a[1] - b[1])[0][0];
     let hint = `Järgmine arengukoht on ${labels[weakest]}.`;
-    if (values.sensitivityInput === "sensitive") hint = "Tundlikud isikuandmed vajavad eraldi õiguslikku ja turbeanalüüsi – kõrge skoor üksi ei anna kasutusluba.";
+    if (values.sensitivityInput === "sensitive") hint = "Eriliiki või väga tundlike isikuandmete korral ei piisa mudeliteenuse valimisest. Enne saatmist on vaja õiguslikku alust, andmete minimeerimist ja turvameetmete kontrolli.";
+    else if (values.sensitivityInput === "personal") hint = "Isikuandmete korral kontrolli enne saatmist õiguslikku alust, andmete vajalikkust, teenuse lepingut, säilitamist ja ligipääse.";
+    else if (!values.useCaseInput) hint = "Alusta kasutusjuhust: millise otsuse või tööetapi jaoks on tulemust vaja?";
+    else if (!values.aiRoleInput) hint = "Anna AI-le üks piiratud tegevus: liigita, eralda, võta kokku, tõlgi või selgita.";
+    else if (!roleFits) hint = `Valitud AI ülesanne ei sobi hästi selle kasutusjuhuga. Loogilisem on ${plannerOptionList("aiRoleInput", profile.roles)}.`;
+    else if (!sourceFits) hint = `Valitud andmeallikas ei sobi hästi selle kasutusjuhuga. Loogilisem on ${plannerOptionList("sourceInput", profile.sources)}.`;
+    else if (!roleFormatFits) hint = `Valitud ülesanne vajab teistsugust vastuse vormingut. Sobib ${plannerOptionList("formatInput", roleFormats[values.aiRoleInput])}.`;
+    else if (!visualFormatFits) hint = `Valitud kasutajavaadet ei saa sellest vormingust usaldusväärselt koostada. Sobib ${plannerOptionList("formatInput", visualFormats[values.visualInput])}.`;
+    else if (!visualFits) hint = `Valitud kasutajavaade ei ole selle kasutusjuhu jaoks kõige selgem. Sobib ${plannerOptionList("visualInput", profile.visuals)}.`;
+    else if (values.sensitivityInput === "internal" && ["gemini", "openai", "anthropic"].includes(values.modelInput)) hint = "Asutusesiseste andmete puhul kontrolli enne pilvteenuse kasutamist lepingut, säilitamist, kasutuspiirkonda ja ligipääse.";
     else if (total >= 90) hint = "Tugev visand. Katseta nüüd allpool üht tõrkeolukorda ja vaata, kas plaan peab vastu.";
-    else if (!values.aiRoleInput) hint = "Sõnasta AI-le üks piiratud tegevus: liigita, eralda, võta kokku või selgita.";
     $("#qualityHint").textContent = hint;
     return total;
   }
@@ -874,10 +958,11 @@
       text = state === "good" ? "JSON-skeem tuvastab vormivea ja inimkontroll püüab kinni sisulise vea." : "Kasuta struktureeritud skeemi ning määra, kes vigase või puuduliku vastuse üle vaatab.";
     } else if (scenario === "personal-data") {
       const declared = ["personal", "sensitive"].includes(values.sensitivityInput);
-      const protectedModel = ["local", "azure"].includes(values.modelInput);
-      state = declared && protectedModel && Boolean(values.controlInput) ? "good" : "warn";
-      title = state === "good" ? "Risk on vähemalt nähtav" : "Peata saatmine ja hinda andmekaitset";
-      text = state === "good" ? "Tundlikkus, teenusevalik ja inimkontroll on kavandis nähtavad. Enne päriskasutust kontrolli siiski õiguslikku alust ja lepinguid." : "Ootamatu isikuinfo ei tohi automaatselt mudelile liikuda. Lisa tuvastus, minimeerimine ja lubatud teenus.";
+      state = "warn";
+      title = "Peata saatmine ja hinda andmekaitset";
+      text = declared
+        ? "Risk on kavandis märgitud, kuid teenuse valik üksi ei anna saatmiseks luba. Kontrolli õiguslikku alust, minimeerimist, lepingut ja turvameetmeid."
+        : "Ootamatu isikuinfo ei tohi mudelile edasi liikuda. Lisa tuvastus ja peatamine ning hinda andmete vajalikkust ja lubatud töötlemist.";
     } else if (scenario === "model-outage") {
       const ready = ["manual", "queue", "cache"].includes(values.fallbackInput);
       state = ready ? "good" : "warn";
