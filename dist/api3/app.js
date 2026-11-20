@@ -826,32 +826,44 @@
     statistics: {
       roles: ["explain", "detect"],
       sources: ["statistics-api", "database-api", "csv"],
-      visuals: ["kpi", "chart", "table", "summary"]
+      visuals: ["kpi", "chart", "table", "summary"],
+      environments: ["r", "python", "web", "workflow", "sheets", "backend"],
+      triggers: ["button", "schedule", "new-data", "batch"]
     },
     survey: {
       roles: ["classify", "summarize", "detect"],
       sources: ["form", "csv", "database-api"],
-      visuals: ["chart", "table", "summary"]
+      visuals: ["chart", "table", "summary"],
+      environments: ["r", "python", "web", "workflow", "sheets", "backend"],
+      triggers: ["button", "schedule", "new-data", "form", "batch"]
     },
     documents: {
       roles: ["extract", "summarize", "classify", "translate"],
       sources: ["documents", "email", "database-api"],
-      visuals: ["table", "summary", "json"]
+      visuals: ["table", "summary", "json"],
+      environments: ["python", "web", "workflow", "backend"],
+      triggers: ["button", "schedule", "new-data", "batch"]
     },
     support: {
       roles: ["classify", "draft", "summarize", "translate", "detect"],
       sources: ["crm", "email", "form", "database-api"],
-      visuals: ["notification", "table", "summary", "json"]
+      visuals: ["notification", "table", "summary", "json"],
+      environments: ["python", "web", "workflow", "backend"],
+      triggers: ["button", "schedule", "new-data", "form", "batch"]
     },
     meetings: {
       roles: ["summarize", "extract"],
       sources: ["documents", "email", "database-api"],
-      visuals: ["summary", "table", "json"]
+      visuals: ["summary", "table", "json"],
+      environments: ["python", "web", "workflow", "backend"],
+      triggers: ["button", "schedule", "new-data", "batch"]
     },
     content: {
       roles: ["draft", "translate", "summarize"],
       sources: ["database-api", "csv", "documents"],
-      visuals: ["summary", "table", "json"]
+      visuals: ["summary", "table", "json"],
+      environments: ["python", "web", "workflow", "sheets", "backend"],
+      triggers: ["button", "schedule", "new-data", "form", "batch"]
     }
   };
 
@@ -874,6 +886,73 @@
     json: ["json", "schema"]
   };
 
+  const sourceEnvironments = {
+    "statistics-api": ["r", "python", "web", "workflow", "sheets", "backend"],
+    "database-api": ["r", "python", "web", "workflow", "sheets", "backend"],
+    csv: ["r", "python", "web", "workflow", "sheets", "backend"],
+    form: ["r", "python", "web", "workflow", "sheets", "backend"],
+    email: ["python", "web", "workflow", "backend"],
+    documents: ["python", "web", "workflow", "backend"],
+    crm: ["python", "web", "workflow", "backend"]
+  };
+
+  const sourceTriggers = {
+    "statistics-api": ["button", "schedule"],
+    "database-api": ["button", "schedule", "new-data"],
+    csv: ["button", "schedule", "batch"],
+    form: ["button", "schedule", "new-data", "form"],
+    email: ["button", "schedule", "new-data"],
+    documents: ["button", "schedule", "new-data", "batch"],
+    crm: ["button", "schedule", "new-data"]
+  };
+
+  function intersectPlannerOptions(...groups) {
+    const activeGroups = groups.filter(Boolean);
+    if (!activeGroups.length) return null;
+    return activeGroups.slice(1).reduce((result, group) => result.filter((value) => group.includes(value)), [...activeGroups[0]]);
+  }
+
+  function plannerValueAllowed(value, allowed) {
+    return !value || !allowed || allowed.includes(value);
+  }
+
+  function restrictPlannerSelect(id, allowed) {
+    const select = $(`#${id}`);
+    [...select.options].forEach((option) => {
+      option.disabled = Boolean(option.value && allowed && !allowed.includes(option.value));
+    });
+    if (!plannerValueAllowed(select.value, allowed)) select.value = "";
+  }
+
+  function plannerCompatibility(values) {
+    const profile = workflowProfiles[values.useCaseInput];
+    return {
+      profile,
+      roles: profile?.roles || null,
+      sources: profile?.sources || null,
+      visuals: profile?.visuals || null,
+      environments: intersectPlannerOptions(profile?.environments, sourceEnvironments[values.sourceInput]),
+      triggers: intersectPlannerOptions(profile?.triggers, sourceTriggers[values.sourceInput]),
+      formats: intersectPlannerOptions(roleFormats[values.aiRoleInput], visualFormats[values.visualInput]),
+      models: values.environmentInput === "sheets" ? ["gemini", "openai", "anthropic", "azure"] : null
+    };
+  }
+
+  function updatePlannerAvailability() {
+    const values = Object.fromEntries(plannerFields.map((id) => [id, plannerValue(id)]));
+    const compatibility = plannerCompatibility(values);
+    restrictPlannerSelect("sourceInput", compatibility.sources);
+    restrictPlannerSelect("aiRoleInput", compatibility.roles);
+    restrictPlannerSelect("visualInput", compatibility.visuals);
+
+    const refreshedValues = Object.fromEntries(plannerFields.map((id) => [id, plannerValue(id)]));
+    const refreshedCompatibility = plannerCompatibility(refreshedValues);
+    restrictPlannerSelect("environmentInput", refreshedCompatibility.environments);
+    restrictPlannerSelect("triggerInput", refreshedCompatibility.triggers);
+    restrictPlannerSelect("formatInput", refreshedCompatibility.formats);
+    restrictPlannerSelect("modelInput", refreshedCompatibility.models);
+  }
+
   function plannerOptionList(id, values) {
     const labels = values.slice(0, 3).map((value) => $(`#${id} option[value="${value}"]`).textContent.trim());
     if (labels.length < 2) return labels[0] || "sobiv valik";
@@ -881,10 +960,14 @@
   }
 
   function updateQuality(values) {
-    const profile = workflowProfiles[values.useCaseInput];
-    const roleFits = !profile || !values.aiRoleInput || profile.roles.includes(values.aiRoleInput);
-    const sourceFits = !profile || !values.sourceInput || profile.sources.includes(values.sourceInput);
-    const visualFits = !profile || !values.visualInput || profile.visuals.includes(values.visualInput);
+    const compatibility = plannerCompatibility(values);
+    const profile = compatibility.profile;
+    const roleFits = plannerValueAllowed(values.aiRoleInput, compatibility.roles);
+    const sourceFits = plannerValueAllowed(values.sourceInput, compatibility.sources);
+    const visualFits = plannerValueAllowed(values.visualInput, compatibility.visuals);
+    const environmentFits = plannerValueAllowed(values.environmentInput, compatibility.environments);
+    const triggerFits = plannerValueAllowed(values.triggerInput, compatibility.triggers);
+    const modelFits = plannerValueAllowed(values.modelInput, compatibility.models);
     const roleFormatFits = !values.aiRoleInput || !values.formatInput || roleFormats[values.aiRoleInput].includes(values.formatInput);
     const visualFormatFits = !values.visualInput || !values.formatInput || visualFormats[values.visualInput].includes(values.formatInput);
 
@@ -908,7 +991,12 @@
 
     const strongControl = ["approve", "facts", "owner"].includes(values.controlInput);
     const control = (values.controlInput ? 10 : 0) + (values.formatInput ? 5 : 0) + (strongControl ? 7 : values.controlInput ? 5 : 0) + (values.modelInput ? 3 : 0);
-    const reliability = (values.fallbackInput ? 10 : 0) + (values.triggerInput ? 5 : 0) + (values.environmentInput ? 5 : 0) + (values.modelInput ? 5 : 0);
+    let reliability = (values.fallbackInput ? 10 : 0) + (values.triggerInput ? 5 : 0) + (values.environmentInput ? 5 : 0) + (values.modelInput ? 5 : 0);
+    if (!environmentFits) reliability -= 8;
+    if (!triggerFits) reliability -= 7;
+    if (!modelFits) reliability -= 5;
+    reliability = Math.max(0, reliability);
+    if (![environmentFits, triggerFits, modelFits].every(Boolean)) reliability = Math.min(reliability, 9);
     const dimensions = { clarity, privacy, control, reliability };
     Object.entries(dimensions).forEach(([key, score]) => {
       $(`#${key}Score`).textContent = String(score);
@@ -926,6 +1014,9 @@
     if (values.sensitivityInput === "sensitive") hint = "Eriliiki või väga tundlike isikuandmete korral ei piisa mudeliteenuse valimisest. Enne saatmist on vaja õiguslikku alust, andmete minimeerimist ja turvameetmete kontrolli.";
     else if (values.sensitivityInput === "personal") hint = "Isikuandmete korral kontrolli enne saatmist õiguslikku alust, andmete vajalikkust, teenuse lepingut, säilitamist ja ligipääse.";
     else if (!values.useCaseInput) hint = "Alusta kasutusjuhust: millise otsuse või tööetapi jaoks on tulemust vaja?";
+    else if (!environmentFits) hint = `Valitud käituskeskkond ei sobi selle kasutusjuhu ja andmeallikaga. Sobib ${plannerOptionList("environmentInput", compatibility.environments)}.`;
+    else if (!triggerFits) hint = `Valitud käivitaja ei sobi selle andmeallikaga. Sobib ${plannerOptionList("triggerInput", compatibility.triggers)}.`;
+    else if (!modelFits) hint = "Google Sheetsi töövoog ei pääse tavaliselt asutuse lokaalsele mudeli-API-le. Vali ligipääsetav teenus või teine käituskeskkond.";
     else if (!values.aiRoleInput) hint = "Anna AI-le üks piiratud tegevus: liigita, eralda, võta kokku, tõlgi või selgita.";
     else if (!roleFits) hint = `Valitud AI ülesanne ei sobi hästi selle kasutusjuhuga. Loogilisem on ${plannerOptionList("aiRoleInput", profile.roles)}.`;
     else if (!sourceFits) hint = `Valitud andmeallikas ei sobi hästi selle kasutusjuhuga. Loogilisem on ${plannerOptionList("sourceInput", profile.sources)}.`;
@@ -999,6 +1090,7 @@
   function resetPlanner() {
     $("#workflowPlanner").reset();
     $("#stressInput").value = "";
+    updatePlannerAvailability();
     updatePlannerPreview();
   }
 
@@ -1105,7 +1197,10 @@
     if (event.target.matches("select")) updateSequenceExercise();
   });
   $("#resetSequence").addEventListener("click", resetSequenceExercise);
-  plannerFields.forEach((id) => $(`#${id}`).addEventListener("change", updatePlannerPreview));
+  plannerFields.forEach((id) => $(`#${id}`).addEventListener("change", () => {
+    updatePlannerAvailability();
+    updatePlannerPreview();
+  }));
   $("#stressInput").addEventListener("change", () => {
     const values = Object.fromEntries(plannerFields.map((id) => [id, plannerValue(id)]));
     renderStressTest(values);
@@ -1143,6 +1238,7 @@
   updateProgress();
   showStep(1);
   updateSequenceExercise();
+  updatePlannerAvailability();
   updatePlannerPreview();
   window.setTimeout(syncHeight, 100);
 })();

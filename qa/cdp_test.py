@@ -388,6 +388,8 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
             naturalHeading: document.querySelector('.planner-section h3').textContent.trim(),
             useCasePrompt: useCaseInput.options[0].textContent.trim(),
             workflowTool: environmentInput.querySelector('option[value="workflow"]').textContent.trim(),
+            pythonEnvironment: environmentInput.querySelector('option[value="python"]').textContent.trim(),
+            webEnvironment: environmentInput.querySelector('option[value="web"]').textContent.trim(),
             sourceApiLabel: sourceInput.querySelector('option[value="database-api"]').textContent.trim(),
             schemaLabel: formatInput.querySelector('option[value="schema"]').textContent.trim(),
             localModelLabel: modelInput.querySelector('option[value="local"]').textContent.trim(),
@@ -406,6 +408,8 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
             "naturalHeading": "Millise API-töövoo kavandad ja kust see algab?",
             "useCasePrompt": "Vali kasutusjuht",
             "workflowTool": "Töövootööriist (n8n / Make / Zapier)",
+            "pythonEnvironment": "Pythoni skript või analüüsitööriist",
+            "webEnvironment": "Veebirakendus koos serveripoolega",
             "sourceApiLabel": "Andmebaasi või infosüsteemi API",
             "schemaLabel": "JSON etteantud skeemi järgi",
             "localModelLabel": "Asutuse hallatav lokaalne mudeli-API",
@@ -422,25 +426,55 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
             select.dispatchEvent(new Event('change', {bubbles:true}));
           });
           const coherentScenarios = [
-            {useCaseInput:'statistics', sourceInput:'statistics-api', aiRoleInput:'explain', formatInput:'json', visualInput:'chart'},
-            {useCaseInput:'survey', sourceInput:'form', aiRoleInput:'classify', formatInput:'schema', visualInput:'chart'},
-            {useCaseInput:'documents', sourceInput:'documents', aiRoleInput:'extract', formatInput:'schema', visualInput:'json'},
-            {useCaseInput:'support', sourceInput:'crm', aiRoleInput:'classify', formatInput:'schema', visualInput:'notification'},
-            {useCaseInput:'meetings', sourceInput:'documents', aiRoleInput:'summarize', formatInput:'markdown', visualInput:'summary'},
-            {useCaseInput:'content', sourceInput:'database-api', aiRoleInput:'draft', formatInput:'markdown', visualInput:'summary'}
+            {useCaseInput:'statistics', environmentInput:'r', triggerInput:'button', sourceInput:'statistics-api', aiRoleInput:'explain', formatInput:'json', visualInput:'chart'},
+            {useCaseInput:'survey', environmentInput:'r', triggerInput:'form', sourceInput:'form', aiRoleInput:'classify', formatInput:'schema', visualInput:'chart'},
+            {useCaseInput:'documents', environmentInput:'python', triggerInput:'batch', sourceInput:'documents', aiRoleInput:'extract', formatInput:'schema', visualInput:'json'},
+            {useCaseInput:'support', environmentInput:'workflow', triggerInput:'new-data', sourceInput:'crm', aiRoleInput:'classify', formatInput:'schema', visualInput:'notification'},
+            {useCaseInput:'meetings', environmentInput:'workflow', triggerInput:'batch', sourceInput:'documents', aiRoleInput:'summarize', formatInput:'markdown', visualInput:'summary'},
+            {useCaseInput:'content', environmentInput:'web', triggerInput:'button', sourceInput:'database-api', aiRoleInput:'draft', formatInput:'markdown', visualInput:'summary'}
           ];
           const coherentScores = coherentScenarios.map(choices => {
             setChoices({...choices, sensitivityInput:'public', modelInput:'gemini'});
             return Number(qualityScore.textContent);
           });
 
-          setChoices({useCaseInput:'statistics', sourceInput:'statistics-api', aiRoleInput:'draft', formatInput:'markdown', visualInput:'summary', sensitivityInput:'public', modelInput:'gemini'});
-          const roleMismatch = {score:Number(qualityScore.textContent), hint:qualityHint.textContent.trim(), strong:qualityScore.parentElement.classList.contains('strong')};
+          setChoices({useCaseInput:'documents', sourceInput:'documents'});
+          const documentFilters = {
+            rDisabled: environmentInput.querySelector('option[value="r"]').disabled,
+            sheetsDisabled: environmentInput.querySelector('option[value="sheets"]').disabled,
+            pythonEnabled: !environmentInput.querySelector('option[value="python"]').disabled,
+            formTriggerDisabled: triggerInput.querySelector('option[value="form"]').disabled,
+            batchTriggerEnabled: !triggerInput.querySelector('option[value="batch"]').disabled
+          };
+          environmentInput.value = 'r';
+          environmentInput.dispatchEvent(new Event('change', {bubbles:true}));
+          const rSelectionBlocked = environmentInput.value === '';
 
-          setChoices({aiRoleInput:'explain', formatInput:'text', visualInput:'chart'});
-          const formatMismatch = {score:Number(qualityScore.textContent), hint:qualityHint.textContent.trim(), strong:qualityScore.parentElement.classList.contains('strong')};
+          setChoices({aiRoleInput:'extract', visualInput:'json'});
+          const formatFilters = {
+            textDisabled: formatInput.querySelector('option[value="text"]').disabled,
+            schemaEnabled: !formatInput.querySelector('option[value="schema"]').disabled
+          };
 
-          setChoices({formatInput:'json', visualInput:'chart', sensitivityInput:'sensitive', modelInput:'gemini'});
+          setChoices({useCaseInput:'statistics', environmentInput:'r', sourceInput:'statistics-api', triggerInput:'schedule', aiRoleInput:'explain', visualInput:'chart'});
+          const statisticsFilters = {
+            scheduleEnabled: !triggerInput.querySelector('option[value="schedule"]').disabled,
+            newDataDisabled: triggerInput.querySelector('option[value="new-data"]').disabled,
+            rEnabled: !environmentInput.querySelector('option[value="r"]').disabled
+          };
+          formatInput.value = 'text';
+          formatInput.dispatchEvent(new Event('change', {bubbles:true}));
+          const formatMismatchBlocked = formatInput.value === '';
+          aiRoleInput.value = 'draft';
+          aiRoleInput.dispatchEvent(new Event('change', {bubbles:true}));
+          const roleMismatchBlocked = aiRoleInput.value === '';
+
+          setChoices({useCaseInput:'survey', environmentInput:'sheets', sourceInput:'form'});
+          modelInput.value = 'local';
+          modelInput.dispatchEvent(new Event('change', {bubbles:true}));
+          const localModelBlockedInSheets = modelInput.value === '';
+
+          setChoices({useCaseInput:'statistics', environmentInput:'r', triggerInput:'schedule', sourceInput:'statistics-api', aiRoleInput:'explain', formatInput:'json', visualInput:'chart', sensitivityInput:'sensitive', modelInput:'gemini'});
           const sensitiveData = {score:Number(qualityScore.textContent), hint:qualityHint.textContent.trim(), strong:qualityScore.parentElement.classList.contains('strong')};
 
           setChoices({sensitivityInput:'personal', modelInput:'local', controlInput:'approve'});
@@ -448,11 +482,13 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
           stressInput.dispatchEvent(new Event('change', {bubbles:true}));
           const personalDataStress = {warn:stressResult.classList.contains('warn'), title:stressResult.querySelector('b').textContent.trim()};
 
-          return {coherentScores, roleMismatch, formatMismatch, sensitiveData, personalDataStress};
+          return {coherentScores, documentFilters, rSelectionBlocked, formatFilters, statisticsFilters, formatMismatchBlocked, roleMismatchBlocked, localModelBlockedInSheets, sensitiveData, personalDataStress};
         })())"""))
         assert logic_checks["coherentScores"] == [100, 100, 100, 100, 100, 100], logic_checks
-        assert logic_checks["roleMismatch"]["score"] < 85 and not logic_checks["roleMismatch"]["strong"] and "ei sobi hästi" in logic_checks["roleMismatch"]["hint"], logic_checks
-        assert logic_checks["formatMismatch"]["score"] < 85 and not logic_checks["formatMismatch"]["strong"] and "usaldusväärselt" in logic_checks["formatMismatch"]["hint"], logic_checks
+        assert logic_checks["documentFilters"] == {"rDisabled": True, "sheetsDisabled": True, "pythonEnabled": True, "formTriggerDisabled": True, "batchTriggerEnabled": True}, logic_checks
+        assert logic_checks["rSelectionBlocked"] and logic_checks["formatMismatchBlocked"] and logic_checks["roleMismatchBlocked"] and logic_checks["localModelBlockedInSheets"], logic_checks
+        assert logic_checks["formatFilters"] == {"textDisabled": True, "schemaEnabled": True}, logic_checks
+        assert logic_checks["statisticsFilters"] == {"scheduleEnabled": True, "newDataDisabled": True, "rEnabled": True}, logic_checks
         assert logic_checks["sensitiveData"]["score"] < 85 and not logic_checks["sensitiveData"]["strong"] and "õiguslikku alust" in logic_checks["sensitiveData"]["hint"], logic_checks
         assert logic_checks["personalDataStress"] == {"warn": True, "title": "Peata saatmine ja hinda andmekaitset"}, logic_checks
 
