@@ -309,6 +309,8 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
         sequence_exercise = json.loads(evaluate("""JSON.stringify((() => {
           const stack = document.querySelector('#sequenceStack');
           const initialOrder = [...stack.children].map(block => block.dataset.flowKey).join(',');
+          const pendingFeedbackHidden = sequenceFeedback.hidden && getComputedStyle(sequenceFeedback).display === 'none';
+          const removedGuidance = !document.body.textContent.includes('Ehita protsess algusest lõpuni') && !document.body.textContent.includes('Töövoog algab käivitajast.');
           stack.querySelector('[data-flow-key="source"] [data-sequence-move="down"]').click();
           const moveButtonWorks = [...stack.children].map(block => block.dataset.flowKey).join(',') !== initialOrder;
           resetSequence.click();
@@ -319,6 +321,8 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
           });
           return {
             initialOrder,
+            pendingFeedbackHidden,
+            removedGuidance,
             moveButtonWorks,
             finalOrder: [...stack.children].map(block => block.dataset.flowKey).join(','),
             state: sequenceState.textContent.trim(),
@@ -331,6 +335,8 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
         })())"""))
         assert sequence_exercise == {
             "initialOrder": "source,output,trigger,ai,transform",
+            "pendingFeedbackHidden": True,
+            "removedGuidance": True,
             "moveButtonWorks": True,
             "finalOrder": "trigger,source,transform,ai,output",
             "state": "5 / 5 õiges kohas · 5 / 5 valikut",

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="API 3 interaktiivne õpirakendus: tehisaru API-de ühendamine enda rakendusega ning Statistikaameti andmete tõlgendamine Gemini API abil.">
   <title>API 3 · Tehisaru API-de ühendamine enda rakendusega</title>
-  <link rel="stylesheet" href="styles.css?v=64">
+  <link rel="stylesheet" href="styles.css?v=65">
   <link rel="stylesheet" href="../api-common.css?v=7">
 </head>
 <body>
@@ -245,8 +245,8 @@ vastus_ai &lt;- request(<span class="str">"https://generativelanguage.googleapis
             </article>
           </div>
 
-          <div class="sequence-feedback pending" id="sequenceFeedback">
-            <span aria-hidden="true">1</span><div><b>Alusta töövoo algusest</b><p>Leia kõigepealt sündmus, mis protsessi käivitab. Seejärel liiguta andmete ja töötlemise sammud õigesse kohta.</p></div>
+          <div class="sequence-feedback choices" id="sequenceFeedback" hidden>
+            <span aria-hidden="true">2</span><div><b>Järjestus on paigas</b><p>Nüüd vali igas plokis tegevus, mis vastab selle sammu ülesandele.</p></div>
           </div>
         </article>
       </div>
@@ -378,6 +378,6 @@ vastus_ai &lt;- request(<span class="str">"https://generativelanguage.googleapis
   </dialog>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="../api-nav.js"></script>
-  <script src="app.js?v=65"></script>
+  <script src="app.js?v=66"></script>
 </body>
 </html>

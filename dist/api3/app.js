@@ -771,14 +771,13 @@
     $("#sequenceProgress").style.width = `${score * 10}%`;
 
     const feedback = $("#sequenceFeedback");
-    feedback.className = `sequence-feedback ${solved ? "complete" : positionsCorrect === 5 ? "choices" : "pending"}`;
-    feedback.querySelector("span").textContent = solved ? "✓" : positionsCorrect === 5 ? "2" : "1";
-    feedback.querySelector("b").textContent = solved ? "Loogiline töövoog on valmis" : positionsCorrect === 5 ? "Järjestus on paigas" : "Ehita protsess algusest lõpuni";
+    feedback.hidden = positionsCorrect !== 5;
+    feedback.className = `sequence-feedback ${solved ? "complete" : "choices"}`;
+    feedback.querySelector("span").textContent = solved ? "✓" : "2";
+    feedback.querySelector("b").textContent = solved ? "Loogiline töövoog on valmis" : "Järjestus on paigas";
     feedback.querySelector("p").textContent = solved
       ? "Käivitaja, andmed, R-töötlus, AI API ja kasutajale kuvatav tulemus moodustavad tervikliku protsessi."
-      : positionsCorrect === 5
-        ? "Nüüd vali igas plokis tegevus, mis vastab selle sammu ülesandele."
-        : "Töövoog algab käivitajast. Andmed tuleb kätte saada ja töödelda enne, kui arvud saadetakse keelemudelile.";
+      : "Nüüd vali igas plokis tegevus, mis vastab selle sammu ülesandele.";
     syncHeight();
   }
 
