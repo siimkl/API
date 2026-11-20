@@ -201,6 +201,24 @@
     target.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
+  function alignPostResponseWithAiLesson() {
+    const lesson = $('[data-lesson="4"]');
+    if (!lesson) return;
+    els.stageCard.scrollTop = 0;
+    if (!window.matchMedia("(min-width: 1001px)").matches) {
+      lesson.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
+    const lab = $(".lab-grid");
+    const stickyTop = 12;
+    const lessonTop = lesson.getBoundingClientRect().top + window.scrollY;
+    const latestStickyScroll = lab.getBoundingClientRect().bottom + window.scrollY - els.stageCard.offsetHeight - stickyTop;
+    window.scrollTo({
+      top: Math.max(0, Math.min(lessonTop - stickyTop, latestStickyScroll)),
+      behavior: "smooth"
+    });
+  }
+
   function setResponseContext(label, message, kind = "neutral") {
     els.responseContextLabel.textContent = label;
     els.responseContextText.textContent = message;
@@ -964,7 +982,7 @@
     if (dialogStep === 4) {
       window.setTimeout(() => alignResponseWithLesson(5), 120);
     } else if (dialogStep === 3 && !els.modelGuide.hidden) {
-      window.setTimeout(() => els.stageCard.scrollIntoView({ behavior: "smooth", block: "start" }), 120);
+      window.setTimeout(alignPostResponseWithAiLesson, 120);
     } else if (dialogStep === 1) {
       window.setTimeout(() => alignResponseWithLesson(2), 120);
     }

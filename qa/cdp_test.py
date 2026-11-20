@@ -224,6 +224,41 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
         api3_header = header_state()
         api3_style = shared_style_state()
         screenshot("api3-header.png")
+
+        evaluate("document.querySelector('[data-run=\"1\"]').click()")
+        time.sleep(4.9)
+        assert evaluate("!flowDialogClose.disabled")
+        evaluate("flowDialogClose.click()")
+        time.sleep(0.7)
+        assert evaluate("document.querySelector('.step.active').dataset.step") == "2"
+        evaluate("document.querySelector('[data-run=\"2\"]').click()")
+        time.sleep(0.7)
+        assert evaluate("document.querySelector('.step.active').dataset.step") == "3"
+        evaluate("document.querySelector('[data-run=\"3\"]').click()")
+        time.sleep(4.9)
+        assert evaluate("!flowDialogClose.disabled")
+        evaluate("flowDialogClose.click()")
+        time.sleep(1.1)
+        post_transition = json.loads(evaluate("""JSON.stringify((() => {
+          const lesson = document.querySelector('[data-lesson="4"]');
+          return {
+            activeStep: document.querySelector('.step.active').dataset.step,
+            lessonActive: lesson.classList.contains('active') && !lesson.hidden,
+            lessonTitle: lesson.querySelector('h3').textContent.trim(),
+            lessonTop: Math.round(lesson.getBoundingClientRect().top),
+            responseTitle: document.querySelector('.stage-card .card-heading h2').textContent.trim(),
+            responseTitleTop: Math.round(document.querySelector('.stage-card .card-heading h2').getBoundingClientRect().top),
+            responseScrollTop: Math.round(document.querySelector('.stage-card').scrollTop),
+            responsePanel: !document.querySelector('#jsonPanel').hidden,
+            modelGuide: !document.querySelector('#modelGuide').hidden
+          };
+        })())"""))
+        assert post_transition["activeStep"] == "4", post_transition
+        assert post_transition["lessonActive"] and post_transition["lessonTitle"] == "Kuidas saadetakse tulemus keelemudelile?", post_transition
+        assert 0 <= post_transition["lessonTop"] <= 320, post_transition
+        assert post_transition["responseTitle"] == "Mida API vastas?" and 0 <= post_transition["responseTitleTop"] <= 100, post_transition
+        assert post_transition["responseScrollTop"] == 0 and post_transition["responsePanel"] and post_transition["modelGuide"], post_transition
+        screenshot("api3-post-to-ai-step.png")
         evaluate("scrollTo(0, document.documentElement.scrollHeight)")
         time.sleep(0.3)
         screenshot("api3-footer.png")
