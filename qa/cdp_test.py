@@ -226,7 +226,10 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
         screenshot("api3-header.png")
 
         evaluate("document.querySelector('[data-run=\"1\"]').click()")
-        time.sleep(4.9)
+        time.sleep(0.2)
+        popup_gap = evaluate("Math.round(document.querySelector('.flow-dialog-footer').getBoundingClientRect().top - document.querySelector('.dialog-response-path > span').getBoundingClientRect().bottom)")
+        assert popup_gap >= 24, popup_gap
+        time.sleep(4.7)
         assert evaluate("!flowDialogClose.disabled")
         evaluate("flowDialogClose.click()")
         time.sleep(0.7)
@@ -250,7 +253,8 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
             responseTitleTop: Math.round(document.querySelector('.stage-card .card-heading h2').getBoundingClientRect().top),
             responseScrollTop: Math.round(document.querySelector('.stage-card').scrollTop),
             responsePanel: !document.querySelector('#jsonPanel').hidden,
-            modelGuide: !document.querySelector('#modelGuide').hidden
+            modelGuide: !document.querySelector('#modelGuide').hidden,
+            storyStripRemoved: document.querySelector('.story-strip').hidden
           };
         })())"""))
         assert post_transition["activeStep"] == "4", post_transition
@@ -258,6 +262,7 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
         assert 0 <= post_transition["lessonTop"] <= 320, post_transition
         assert post_transition["responseTitle"] == "Mida API vastas?" and 0 <= post_transition["responseTitleTop"] <= 100, post_transition
         assert post_transition["responseScrollTop"] == 0 and post_transition["responsePanel"] and post_transition["modelGuide"], post_transition
+        assert post_transition["storyStripRemoved"], post_transition
         screenshot("api3-post-to-ai-step.png")
         evaluate("scrollTo(0, document.documentElement.scrollHeight)")
         time.sleep(0.3)

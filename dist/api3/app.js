@@ -128,6 +128,7 @@
     completedCount: $("#completedCount"),
     stageTitle: $("#stageTitle"),
     stageCard: $("#stageCard"),
+    storyStrip: $(".story-strip"),
     storyIndex: $("#storyIndex"),
     storyText: $("#storyText"),
     statusChip: $("#statusChip"),
@@ -497,6 +498,7 @@
     $$(".step").forEach((item) => item.classList.toggle("active", Number(item.dataset.step) === step));
     els.currentStepLabel.textContent = `${step}/${TOTAL_STEPS}`;
     const preserveResponseStage = step === 3 && completed === 2;
+    els.storyStrip.hidden = step === 4;
     if (!preserveResponseStage) {
       els.storyIndex.textContent = String(step).padStart(2, "0");
       els.storyText.innerHTML = stepContent[step].story;
