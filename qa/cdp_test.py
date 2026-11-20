@@ -219,8 +219,10 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
 
         evaluate("document.querySelector('.api-version-select').value='../api3/'; document.querySelector('.api-version-select').dispatchEvent(new Event('change',{bubbles:true}))")
         wait_for_path("/api3/")
-        api3 = json.loads(evaluate("JSON.stringify({selected:document.querySelector('.api-version-select').value,title:document.title,heading:document.querySelector('h1').getAttribute('aria-label')})"))
+        api3 = json.loads(evaluate("JSON.stringify({selected:document.querySelector('.api-version-select').value,title:document.title,heading:document.querySelector('h1').getAttribute('aria-label'),steps:document.querySelectorAll('.step').length,total:document.querySelector('.progress-meta').textContent.replace(/\\s+/g,' ').trim(),hasFifthStep:Boolean(document.querySelector('[data-step=\"5\"], [data-lesson=\"5\"], [data-run=\"5\"]')),hasResultPanel:Boolean(document.querySelector('#resultPanel'))})"))
         assert api3["selected"] == "../api3/" and api3["title"].startswith("API 3"), api3
+        assert api3["steps"] == 4 and "/ 4 sammu" in api3["total"], api3
+        assert not api3["hasFifthStep"] and not api3["hasResultPanel"], api3
         api3_header = header_state()
         api3_style = shared_style_state()
         screenshot("api3-header.png")
@@ -264,6 +266,39 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
         assert post_transition["responseScrollTop"] == 0 and post_transition["responsePanel"] and post_transition["modelGuide"], post_transition
         assert post_transition["storyStripRemoved"], post_transition
         screenshot("api3-post-to-ai-step.png")
+
+        evaluate("document.querySelector('[data-run=\"4\"]').click()")
+        time.sleep(4.9)
+        assert evaluate("!flowDialogClose.disabled")
+        evaluate("flowDialogClose.click()")
+        time.sleep(1.1)
+        ai_complete = json.loads(evaluate("""JSON.stringify({
+          activeStep: document.querySelector('.step.active').dataset.step,
+          completed: completedCount.textContent.trim(),
+          percent: progressValue.textContent.trim(),
+          progressText: document.querySelector('#progressText').textContent.trim(),
+          terminal: terminalTitle.textContent.trim(),
+          badge: consoleBadge.textContent.trim(),
+          context: responseContextLabel.textContent.trim(),
+          responseVisible: !consolePanel.hidden && consoleOutput.textContent.includes('model_output'),
+          practiceUnlocked: !practiceSuite.classList.contains('locked') && practiceSuite.getAttribute('aria-disabled') === null,
+          fifthStepRemoved: !document.querySelector('[data-step="5"], [data-lesson="5"], [data-run="5"]'),
+          resultPanelRemoved: !document.querySelector('#resultPanel')
+        })"""))
+        assert ai_complete == {
+            "activeStep": "4",
+            "completed": "4",
+            "percent": "100%",
+            "progressText": "Töövoog on valmis",
+            "terminal": "gemini-vastus.json",
+            "badge": "200 OK",
+            "context": "GEMINI API VASTUS",
+            "responseVisible": True,
+            "practiceUnlocked": True,
+            "fifthStepRemoved": True,
+            "resultPanelRemoved": True,
+        }, ai_complete
+        screenshot("api3-ai-response-final.png")
         evaluate("scrollTo(0, document.documentElement.scrollHeight)")
         time.sleep(0.3)
         screenshot("api3-footer.png")
@@ -285,25 +320,32 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
           return {
             state: plannerState.textContent.trim(),
             visualSectionRemoved: !document.querySelector('.output-visual'),
-            checks: document.querySelectorAll('.decision-checks .good').length,
-            summaryGood: plannerSummary.classList.contains('good'),
             quality: qualityScore.textContent.trim(),
             launchpadRemoved: !document.querySelector('.practice-launchpad'),
-            request: plannerRequest.textContent.includes('/v1beta/models/gemini:generateContent')
+            blueprintRemoved: !document.querySelector('.request-blueprint'),
+            summaryRemoved: !document.querySelector('#plannerSummary'),
+            checksRemoved: !document.querySelector('.decision-checks'),
+            buildButtonRemoved: !document.querySelector('#buildWorkflow'),
+            naturalHeading: document.querySelector('.planner-section h3').textContent.trim(),
+            useCasePrompt: useCaseInput.options[0].textContent.trim(),
+            workflowTool: environmentInput.querySelector('option[value="workflow"]').textContent.trim()
           };
         })())"""))
         assert planner == {
             "state": "11 / 11 valikut",
             "visualSectionRemoved": True,
-            "checks": 4,
-            "summaryGood": False,
             "quality": "100",
             "launchpadRemoved": True,
-            "request": True,
+            "blueprintRemoved": True,
+            "summaryRemoved": True,
+            "checksRemoved": True,
+            "buildButtonRemoved": True,
+            "naturalHeading": "Millise API-töövoo kavandad ja kust see algab?",
+            "useCasePrompt": "Vali kasutusjuht",
+            "workflowTool": "Töövootööriist (n8n / Make / Zapier)",
         }, planner
-        evaluate("buildWorkflow.click(); practiceSuite.scrollIntoView({block:'start'})")
+        evaluate("practiceSuite.scrollIntoView({block:'start'})")
         time.sleep(0.4)
-        assert evaluate("plannerSummary.classList.contains('good') && !document.querySelector('.output-visual')")
         screenshot("api3-planner-workflow.png")
 
         learning_features = json.loads(evaluate("""JSON.stringify((() => {
@@ -324,11 +366,10 @@ with tempfile.TemporaryDirectory(prefix="api-course-chrome-") as profile:
           return {
             stressWorks,
             useCase: useCaseInput.value,
-            quality: qualityScore.textContent.trim(),
-            request: plannerRequest.textContent.includes('/v1/chat/completions')
+            quality: qualityScore.textContent.trim()
           };
         })())"""))
-        assert learning_features == {"stressWorks": True, "useCase": "documents", "quality": "98", "request": True}, learning_features
+        assert learning_features == {"stressWorks": True, "useCase": "documents", "quality": "98"}, learning_features
         evaluate("practiceSuite.scrollIntoView({block:'start'})")
         time.sleep(0.5)
         screenshot("api3-planner-learning.png")

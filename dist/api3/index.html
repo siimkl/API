@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="API 3 interaktiivne õpirakendus: tehisaru API-de ühendamine enda rakendusega ning Statistikaameti andmete tõlgendamine Gemini API abil.">
   <title>API 3 · Tehisaru API-de ühendamine enda rakendusega</title>
-  <link rel="stylesheet" href="styles.css?v=62">
+  <link rel="stylesheet" href="styles.css?v=63">
   <link rel="stylesheet" href="../api-common.css?v=7">
 </head>
 <body>
@@ -15,13 +15,13 @@
         <div class="eyebrow api-eyebrow"><span class="pulse-dot" aria-hidden="true"></span><a class="api-home-link" href="../" aria-label="Mine Andmepädevuse avalehele">ANDMEPÄDEVUS</a> <span aria-hidden="true">·</span><label class="api-version-switch"><span class="sr-only">Vali API praktikum</span><select class="api-version-select" aria-label="Vali API praktikum"><option value="../api1/">API 1</option><option value="../api2/">API 2</option><option value="../api3/" selected>API 3</option></select></label></div>
         <h1 class="hero-title" aria-label="API päringust vastuseni">API päringust<br><span>vastuseni</span></h1>
         <p class="hero-subtitle">Tehisaru API-de ühendamine enda rakendusega</p>
-        <p class="hero-description">Alusta nagu API 2 praktikumis: küsi Statistikaametist GET-iga metaandmed ja POST-iga palgaandmed. Seejärel lase R-il muutus arvutada ning saada kontrollitud tulemus uue POST-päringuga Gemini API-le.</p>
+        <p class="hero-description">Alusta nagu API 2 praktikumis: küsi Statistikaametist GET-iga metaandmed ja POST-iga palgaandmed. Seejärel lase R-il muutus arvutada ning saada tulemus uue POST-päringuga Gemini API-le.</p>
       </div>
       <div class="hero-side">
         <div class="mission-label">PRAKTIKUMI EDENEMINE</div>
         <div class="progress-value"><strong id="progressValue">0%</strong><span id="progressText">Küsi metaandmed</span></div>
         <div class="progress-track" aria-hidden="true"><span id="progressBar"></span></div>
-        <div class="progress-meta"><span><b id="completedCount">0</b> / 5 sammu</span><span>≈ 20 min</span></div>
+        <div class="progress-meta"><span><b id="completedCount">0</b> / 4 sammu</span><span>≈ 20 min</span></div>
         <button class="ghost-button" id="resetButton" type="button">↻ Alusta algusest</button>
       </div>
     </header>
@@ -39,12 +39,11 @@
       <button class="step" type="button" data-step="2"><span>2</span><div><b>Valik</b><small>Vali metaandmete põhjal</small></div></button>
       <button class="step" type="button" data-step="3"><span>3</span><div><b>POST</b><small>Vaata ja saada päring</small></div></button>
       <button class="step" type="button" data-step="4"><span>4</span><div><b>AI POST</b><small>Saada andmed mudelile</small></div></button>
-      <button class="step" type="button" data-step="5"><span>5</span><div><b>Kontroll</b><small>Tõlgenda mõlemat vastust</small></div></button>
     </nav>
 
     <section class="lab-grid" aria-label="AI API integratsiooni labor">
       <aside class="control-card card">
-        <div class="control-head"><span class="section-kicker">KOOSTA PÄRING<b id="currentStepLabel" hidden>1/5</b></span></div>
+        <div class="control-head"><span class="section-kicker">KOOSTA PÄRING<b id="currentStepLabel" hidden>1/4</b></span></div>
 
         <section class="lesson-panel active" data-lesson="1">
           <div class="control-title"><span>01</span><div><h3>Vaata, mida saab küsida</h3><p>GET-päring tagastab tabeli kirjelduse ja valikud. Palgaandmeid vastuses veel ei ole.</p></div></div>
@@ -112,28 +111,6 @@ vastus_ai &lt;- request(<span class="str">"https://generativelanguage.googleapis
           </div>
         </section>
 
-        <section class="lesson-panel" data-lesson="5" hidden>
-          <div class="control-title"><span>05</span><div><h3>Mida 200 OK tegelikult kinnitab?</h3><p>Kontrolli mõlemat vastust: kas Statistikaamet tagastas õiged väärtused ja kas mudel kasutas samu arve, õiget ühikut ning ei lisanud andmetest tuletamatuid põhjuseid.</p></div></div>
-          <pre class="code-block" id="code5"><code><span class="fn">STATISTIKAAMET · 200 OK</span>
-Näitaja: GR_W_AVG · Tegevusala: TOTAL
-Perioodid: 2024Q2 · 2025Q2 · 2026Q2
-Väärtused: 2007 · 2126 · 2243 eurot
-
-<span class="fn">GEMINI API · 200 OK</span>
-tekst &lt;- unlist(lapply(vastus_ai$steps, function(s) {
-  if (s$type != <span class="str">"model_output"</span>) return(NULL)
-  lapply(s$content, function(x) {
-    if (x$type == <span class="str">"text"</span>) x$text else NULL
-  })
-}))
-cat(paste(tekst, collapse = <span class="str">"\n"</span>))</code></pre>
-          <div class="checklist"><span>✓ Statistikaameti valik ja ühik</span><span>✓ R-i arvutus</span><span>✓ Mudeli arvud ja väited</span></div>
-          <div class="next-action-guide">
-            <span class="next-action-label" aria-hidden="true">JÄRGMISENA <i>↓</i></span>
-            <button class="primary-button orange" type="button" data-run="5"><span>Kontrolli ja tõlgenda</span><i>✓</i></button>
-          </div>
-        </section>
-
         <div class="lesson-nav"><button id="prevLesson" type="button" disabled>← Eelmine</button><div><span id="lessonDots"></span></div><button id="nextLesson" type="button" disabled>Järgmine →</button></div>
       </aside>
 
@@ -173,7 +150,7 @@ cat(paste(tekst, collapse = <span class="str">"\n"</span>))</code></pre>
         </div>
 
         <div class="workspace-panel post-response-workspace" id="jsonPanel" role="tabpanel" hidden>
-          <div class="empty-state" id="jsonEmpty"><span>▦</span><b>Kontrollvaadet veel ei ole</b><small>See avaneb pärast statistiliste väärtuste saabumist.</small></div>
+          <div class="empty-state" id="jsonEmpty"><span>▦</span><b>Andmevaadet veel ei ole</b><small>See avaneb pärast statistiliste väärtuste saabumist.</small></div>
           <div class="post-response-content" id="jsonOutput" hidden>
             <div class="terminal post-response-terminal" aria-label="Statistikaameti POST-päringu JSON-vastus">
               <div class="terminal-bar"><span></span><span></span><span></span><b>andmed.json</b><em class="success">200 OK</em></div>
@@ -188,16 +165,6 @@ cat(paste(tekst, collapse = <span class="str">"\n"</span>))</code></pre>
           </div>
         </div>
 
-        <div class="workspace-panel result-wrap" id="resultPanel" role="tabpanel" hidden>
-          <div class="empty-state" id="resultEmpty"><span>◎</span><b>Kontrollitud tulemust veel ei ole</b><small>Küsi esmalt andmed, arvuta muutus R-is ja saada seejärel AI-le.</small></div>
-          <div class="result-content" id="resultContent" hidden>
-            <div class="result-heading"><div><small>KONTROLLITUD SELGITUS</small><h3>Keskmine brutokuupalk</h3></div><span>PA111 · II kvartal</span></div>
-            <div class="salary-comparison"><div><small>2024</small><strong>2 007 €</strong></div><span>→</span><div><small>2026</small><strong>2 243 €</strong></div><b>+236 €<small>+11,8%</small></b></div>
-            <blockquote>„Keskmine brutokuupalk suurenes 2024. aasta II kvartalist 2026. aasta II kvartalini 236 euro ehk 11,8%. Need arvud kirjeldavad muutust, kuid ei näita selle põhjust.”</blockquote>
-            <div class="quality-row"><span>✓ samad arvud</span><span>✓ õige ühik</span><span>✓ põhjuseid ei oletata</span><span>✓ inimene kontrollib</span></div>
-          </div>
-        </div>
-
         <button class="response-next-cue" id="modelGuide" type="button" hidden>
           <span>JÄRGMISENA</span><b>Saada andmed mudelile</b><i aria-hidden="true">↓</i>
         </button>
@@ -208,17 +175,17 @@ cat(paste(tekst, collapse = <span class="str">"\n"</span>))</code></pre>
     <section class="practice-suite locked" id="practiceSuite" aria-labelledby="practiceTitle" aria-disabled="true">
       <header class="practice-suite-head">
         <div><span class="section-kicker">ISESEISEV HARJUTUS · API 3 SLAIDID</span><h2 id="practiceTitle">Kavanda kontrollitud AI API töövoog</h2></div>
-        <p>Tee valikud rippmenüüdest. Paremal tekib reaalajas viiesammuline töövoog koos valmidusskoori, API-päringu visandi ja kvaliteedikontrolliga.</p>
+        <p>Tee valikud rippmenüüdest. Paremal tekib reaalajas viiesammuline töövoog koos valmidusskooriga.</p>
       </header>
 
       <div class="planner-grid">
         <form class="planner-form card" id="workflowPlanner">
           <section class="planner-section">
             <div class="planner-number">1</div>
-            <div><span class="section-kicker">KASUTUSJUHT JA KÄIVITUS</span><h3>Mida automatiseerid ja kust töövoog algab?</h3></div>
+            <div><span class="section-kicker">KASUTUSJUHT JA KÄIVITUS</span><h3>Millise API-töövoo kavandad ja kust see algab?</h3></div>
             <div class="planner-fields-grid">
-              <label class="planner-field planner-wide"><span>Kasutusjuht</span><select id="useCaseInput"><option value="">Vali korduv ülesanne</option><option value="statistics">Statistikaandmete muutuse selgitamine</option><option value="survey">Küsitluse vastuste teemastamine</option><option value="documents">Dokumentidest info eraldamine</option><option value="support">Kliendipäringute liigitamine</option><option value="meetings">Koosolekumärkmete kokkuvõte</option><option value="content">Tootekirjelduste mustandid</option><option value="other">Muu korduv ülesanne</option></select></label>
-              <label class="planner-field"><span>Käivituskeskkond</span><select id="environmentInput"><option value="">Vali keskkond</option><option value="r">R / RStudio</option><option value="python">Python</option><option value="web">Veebirakendus</option><option value="automation">n8n / Make / Zapier</option><option value="sheets">Google Sheets + Apps Script</option><option value="backend">Serverirakendus</option></select></label>
+              <label class="planner-field planner-wide"><span>Kasutusjuht</span><select id="useCaseInput"><option value="">Vali kasutusjuht</option><option value="statistics">Statistikaandmete muutuse selgitamine</option><option value="survey">Küsitluse vastuste teemastamine</option><option value="documents">Dokumentidest info eraldamine</option><option value="support">Kliendipäringute liigitamine</option><option value="meetings">Koosolekumärkmete kokkuvõte</option><option value="content">Tootekirjelduste mustandid</option><option value="other">Muu kasutusjuht</option></select></label>
+              <label class="planner-field"><span>Käivituskeskkond</span><select id="environmentInput"><option value="">Vali keskkond</option><option value="r">R / RStudio</option><option value="python">Python</option><option value="web">Veebirakendus</option><option value="workflow">Töövootööriist (n8n / Make / Zapier)</option><option value="sheets">Google Sheets + Apps Script</option><option value="backend">Serverirakendus</option></select></label>
               <label class="planner-field"><span>Käivitaja</span><select id="triggerInput"><option value="">Vali käivitus</option><option value="button">Kasutaja vajutab nuppu</option><option value="schedule">Ajastatud töö</option><option value="new-data">Uus andmekirje</option><option value="form">Vormi esitamine</option><option value="batch">Failide hulgilaadimine</option></select></label>
             </div>
           </section>
@@ -246,7 +213,6 @@ cat(paste(tekst, collapse = <span class="str">"\n"</span>))</code></pre>
           </section>
 
           <div class="planner-actions">
-            <button class="primary-button" id="buildWorkflow" type="button"><span>Koosta töövoo visand</span><i>→</i></button>
             <button class="secondary-button" id="clearWorkflow" type="button">Tühjenda</button>
           </div>
           <p class="planner-privacy"><b>Privaatsus:</b> valikud jäävad ainult sellesse brauseri vaatesse ja neid ei saadeta ühelegi API-le.</p>
@@ -271,20 +237,6 @@ cat(paste(tekst, collapse = <span class="str">"\n"</span>))</code></pre>
             <li><span>4</span><div><b>Väljund</b><small id="previewOutput">Vali vastuse vorming ja kasutajavaade</small></div></li>
             <li class="control-step"><span>✓</span><div><b>Inimkontroll ja varuplaan</b><small id="previewControl">Määra kontroll ning tegevus tõrke korral</small></div></li>
           </ol>
-          <details class="request-blueprint">
-            <summary><span>API-PÄRINGU VISAND</span><b>Kuidas valikud muutuvad päringuks?</b></summary>
-            <pre id="plannerRequest">POST [vali mudel või API]
-Content-Type: application/json
-Authorization: [REDACTED]
-
-{
-  "task": "vali AI piiratud ülesanne",
-  "response_format": "vali vorming"
-}</pre>
-            <p><b>Õppevisand.</b> Tegelik otspunkt, autentimine ja parameetrid sõltuvad valitud teenuse dokumentatsioonist. API-võtit ei panda brauserikoodi.</p>
-          </details>
-          <div class="planner-summary" id="plannerSummary">Tee valikud. Skeem, valmidusskoor ja API-päringu visand uuenevad automaatselt; nupuga saad valmis töövoo kinnitada.</div>
-          <div class="decision-checks" aria-label="Töövoo kvaliteedikontroll"><span id="privacyCheck">○ Määra andmete tundlikkus</span><span id="structureCheck">○ Määra vastuse vorming</span><span id="reviewCheck">○ Määra inimkontroll</span><span id="resilienceCheck">○ Määra tõrkeplaan</span></div>
         </article>
         <section class="stress-lab" aria-labelledby="stressTitle">
           <div><span class="section-kicker">LÕPUKATSE · MIS SIIS, KUI?</span><h4 id="stressTitle">Pane oma töövoog proovile</h4><p>Vali tõrkeolukord. Tagasiside kasutab sinu praeguseid kontrolli-, vormingu- ja varuplaani valikuid ning soovitab vajaduse korral parandust.</p></div>
@@ -346,6 +298,6 @@ Authorization: [REDACTED]
   </dialog>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="../api-nav.js"></script>
-  <script src="app.js?v=63"></script>
+  <script src="app.js?v=64"></script>
 </body>
 </html>

@@ -5,23 +5,21 @@
   const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
   const wait = (ms) => new Promise((resolve) => window.setTimeout(resolve, ms));
 
-  const TOTAL_STEPS = 5;
+  const TOTAL_STEPS = 4;
   const requestSteps = new Set([1, 3, 4]);
 
   const stepContent = {
     1: { title: "Vaata, mida saab küsida", story: "<b>Alusta tabeli kirjeldusest.</b> GET-päring näitab, milliseid andmeid saab küsida." },
     2: { title: "Vali soovitud andmed", story: "<b>Vali metaandmete põhjal näitaja, tegevusala ja vaatlusperiood.</b> Iga muudatus uuendab all olevat POST-päringut automaatselt, nii et näed kohe päringu keha muutumist." },
     3: { title: "Küsi valitud andmed", story: "<b>POST-päring saadab sinu valiku Statistikaameti API-le JSON-vormingus.</b> Vastus sisaldab just valitud näitaja, tegevusala ja perioodide väärtusi." },
-    4: { title: "Saada arvutatud tulemus Gemini API-le", story: "<b>Vastus on vaadatud.</b> Nüüd kontrolli vastuse sisu ja tähendust." },
-    5: { title: "Kontrolli mõlemat API vastust", story: "<b>200 OK kinnitab ainult tehnilist õnnestumist.</b> Kontrolli Statistikaameti valikut ja ühikut ning seejärel seda, kas mudel kasutas samu arve ega lisanud väljamõeldud põhjuseid." }
+    4: { title: "Saada arvutatud tulemus Gemini API-le", story: "" }
   };
 
   const outputs = {
     1: `GET /api/v1/et/stat/PA111\nAccept: application/json\n\nHTTP/1.1 200 OK\n\nMETAANDMED\n• Näitaja — 12 võimalikku valikut\n• Tegevusala — 20 võimalikku valikut\n• Vaatlusperiood — 22 võimalikku valikut\n\nPalgaväärtusi vastuses veel ei ole.`,
     2: `> valik\n$Näitaja\n[1] "GR_W_AVG"\n\n$Tegevusala\n[1] "TOTAL"\n\n$Vaatlusperiood\n[1] "2024Q2" "2025Q2" "2026Q2"\n\nValik on R-is valmis: 1 × 1 × 3 = 3 väärtust.`,
     3: `> vastus <- pxweb_get(url, query = valik)\n\nHTTP POST → PA111\nStatus: 200 OK\nResponse: PXWEB_DATASET\nDimensions: 1 × 1 × 3\nValues: 2007, 2126, 2243\n\nVastus salvestati R-i objekti "vastus".`,
-    4: `R-I ARVUTUS\n2243 − 2007 = +236 eurot\n(2243 / 2007 − 1) × 100 = +11,8%\n\nPOST /v1beta/interactions\nx-goog-api-key: [REDACTED]\nApi-Revision: 2026-05-20\nContent-Type: application/json\n\n{\n  "model": "gemini-3.6-flash",\n  "input": "2024 II kv: 2007 €; 2026 II kv: 2243 €; muutus +236 € (+11,8%). Selgita kahe lausega. Ära oleta põhjuseid.",\n  "store": false\n}\n\nHTTP/1.1 200 OK\nMudeli vastus saabus JSON-ina.`,
-    5: `MÕLEMA VASTUSE KONTROLL\n\nSTATISTIKAAMET\n✓ näitaja GR_W_AVG\n✓ tegevusala TOTAL\n✓ kolm II kvartalit\n✓ väärtused 2007, 2126, 2243 eurot\n\nGEMINI\n✓ samad algarvud\n✓ R-i arvutus +236 eurot ja +11,8%\n✓ õige ühik\n✓ põhjuseid ei oletata`
+    4: `R-I ARVUTUS\n2243 − 2007 = +236 eurot\n(2243 / 2007 − 1) × 100 = +11,8%\n\nPOST /v1beta/interactions\nx-goog-api-key: [REDACTED]\nApi-Revision: 2026-05-20\nContent-Type: application/json\n\n{\n  "model": "gemini-3.6-flash",\n  "input": "2024 II kv: 2007 €; 2026 II kv: 2243 €; muutus +236 € (+11,8%). Selgita kahe lausega. Ära oleta põhjuseid.",\n  "store": false\n}\n\nHTTP/1.1 200 OK\nMudeli vastus saabus JSON-ina.`
   };
 
   const metadataSample = `{
@@ -107,15 +105,13 @@
     "Küsi metaandmed",
     "Kinnita valik",
     "Saada POST-päring",
-    "Saada andmed mudelile",
-    "Kontrolli ja tõlgenda"
+    "Saada andmed mudelile"
   ];
   const completedLabels = [
     "Metaandmed saadud",
     "Valik kinnitatud",
     "POST-päring saadetud",
-    "Andmed mudelile saadetud",
-    "Kontroll tehtud"
+    "AI vastus saadud"
   ];
 
   let currentStep = 1;
@@ -164,8 +160,6 @@
     selectionFeedback: $("#selectionFeedback"),
     selectionAction: $("#selectionAction"),
     modelGuide: $("#modelGuide"),
-    resultEmpty: $("#resultEmpty"),
-    resultContent: $("#resultContent"),
     practiceSuite: $("#practiceSuite"),
     flowDialog: $("#flowDialog"),
     flowDialogKicker: $("#flowDialogKicker"),
@@ -449,7 +443,7 @@
   }
 
   function updateProgress() {
-    const labels = ["Küsi metaandmed", "Vali soovitud andmed", "Saada POST-päring", "Saada Gemini POST", "Kontrolli vastuseid", "Töövoog on valmis"];
+    const labels = ["Küsi metaandmed", "Vali soovitud andmed", "Saada POST-päring", "Saada Gemini POST", "Töövoog on valmis"];
     const percent = Math.round((completed / TOTAL_STEPS) * 100);
     els.progressValue.textContent = `${percent}%`;
     els.progressText.textContent = labels[completed];
@@ -478,7 +472,7 @@
       const number = Number(panel.dataset.lesson);
       panel.hidden = number > visibleLesson;
       panel.classList.toggle("active", number === visibleLesson);
-      panel.classList.toggle("completed", number < visibleLesson && number <= completed);
+      panel.classList.toggle("completed", number <= completed && (number < visibleLesson || number === TOTAL_STEPS));
     });
     if (step === 2) {
       els.selectionAction.dataset.run = "2";
@@ -675,8 +669,7 @@
       1: "metaandmed.json",
       2: "valik.json",
       3: "andmed.json",
-      4: "gemini-vastus.json",
-      5: "kontroll.txt"
+      4: "gemini-vastus.json"
     })[step];
     els.statusChip.className = "status-chip running";
     els.statusText.textContent = requestSteps.has(step) ? `${dialogConfigs[step].method} LIIGUB` : "SAMM TÖÖTAB";
@@ -697,14 +690,13 @@
     els.consoleBadge.textContent = requestSteps.has(step) ? "200 OK" : "valmis";
     els.consoleBadge.className = requestSteps.has(step) ? "success" : "neutral";
     els.statusChip.className = "status-chip success";
-    els.statusText.textContent = step === 3 ? "Vastus käes" : "ÕNNESTUS";
+    els.statusText.textContent = step === 3 || step === 4 ? "Vastus käes" : "ÕNNESTUS";
 
     const responseContexts = {
       1: ["GET-PÄRINGU VASTUS", "Teenus tagastas tabeli muutujad, valikute nimetused ja koodid.", "metadata"],
       2: ["VALIK ON VALMIS", "Metaandmete põhjal koostatud valik määrab järgmise POST-päringu keha.", "metadata"],
       3: ["POST-PÄRINGU VASTUS", "Värvilised arvud on API tagastatud väärtused. Liigu arvule, et näha, milliste päringukoodidega see seotud on.", "data"],
-      4: ["GEMINI API VASTUS", "Keelemudel tagastas R-is arvutatud tulemuse põhjal lühikese tõlgenduse.", "data"],
-      5: ["KONTROLL TEHTUD", "Statistikaameti arvud ja Gemini tõlgendus on omavahel võrreldud.", "data"]
+      4: ["GEMINI API VASTUS", "Keelemudel tagastas R-is arvutatud tulemuse põhjal lühikese tõlgenduse.", "data"]
     };
     setResponseContext(...responseContexts[step]);
 
@@ -722,17 +714,13 @@
     }
     if (step === 4) {
       completeFlowDialog(dialogConfigs[step]);
-    }
-    if (step === 5) {
-      els.resultEmpty.hidden = true;
-      els.resultContent.hidden = false;
       els.practiceSuite.classList.remove("locked");
       els.practiceSuite.removeAttribute("aria-disabled");
-      activateTab("resultPanel");
     }
 
     completed = Math.max(completed, step);
     button.querySelector("span").textContent = completedLabels[step - 1];
+    if (step === TOTAL_STEPS) $(`[data-lesson="${step}"]`).classList.add("completed");
     updateProgress();
     running = false;
     els.nextLesson.disabled = step === TOTAL_STEPS;
@@ -741,9 +729,6 @@
     if (step < TOTAL_STEPS) {
       await wait(420);
       showStep(step + 1);
-    } else {
-      await wait(500);
-      els.practiceSuite.scrollIntoView({ behavior: "smooth", block: "start" });
     }
     syncHeight();
   }
@@ -769,12 +754,6 @@
   function plannerLabel(id, fallback) {
     const select = $(`#${id}`);
     return select.value ? select.selectedOptions[0].textContent.trim() : fallback;
-  }
-
-  function setDecisionCheck(id, state, text) {
-    const item = $(`#${id}`);
-    item.className = state;
-    item.textContent = `${state === "good" ? "✓" : state === "warn" ? "!" : "○"} ${text}`;
   }
 
   function updateQuality(values) {
@@ -807,25 +786,6 @@
     else if (!values.aiRoleInput) hint = "Sõnasta AI-le üks piiratud tegevus: liigita, eralda, võta kokku või selgita.";
     $("#qualityHint").textContent = hint;
     return total;
-  }
-
-  function updateRequestBlueprint(values) {
-    const endpoints = {
-      gemini: ["POST /v1beta/models/gemini:generateContent", "x-goog-api-key: [REDACTED]"],
-      openai: ["POST /v1/responses", "Authorization: Bearer [REDACTED]"],
-      anthropic: ["POST /v1/messages", "x-api-key: [REDACTED]"],
-      azure: ["POST /openai/deployments/{deployment}/responses", "api-key: [REDACTED]"],
-      local: ["POST /v1/chat/completions", "Authorization: Bearer [LOCAL TOKEN]"]
-    };
-    const [endpoint, authorization] = endpoints[values.modelInput] || ["POST [vali mudel või API]", "Authorization: [REDACTED]"];
-    const requestBody = {
-      model: values.modelInput || "vali mudel",
-      task: plannerLabel("aiRoleInput", "vali AI piiratud ülesanne"),
-      source: plannerLabel("sourceInput", "vali andmeallikas"),
-      response_format: values.formatInput || "vali vorming",
-      human_review: plannerLabel("controlInput", "vali inimkontroll")
-    };
-    $("#plannerRequest").textContent = `${endpoint}\nContent-Type: application/json\n${authorization}\n\n${JSON.stringify(requestBody, null, 2)}`;
   }
 
   function renderStressTest(values) {
@@ -870,7 +830,7 @@
     result.querySelector("p").textContent = text;
   }
 
-  function updatePlannerPreview(showResult = false) {
+  function updatePlannerPreview() {
     const values = Object.fromEntries(plannerFields.map((id) => [id, plannerValue(id)]));
     const completedFields = Object.values(values).filter(Boolean).length;
     $("#plannerState").textContent = `${completedFields} / ${plannerFields.length} valikut`;
@@ -880,31 +840,15 @@
     $("#previewOutput").textContent = [plannerLabel("formatInput", "Vorming valimata"), plannerLabel("visualInput", "vaade valimata")].join(" · ");
     $("#previewControl").textContent = [plannerLabel("controlInput", "Kontroll valimata"), plannerLabel("fallbackInput", "varuplaan valimata")].join(" · ");
 
-    const totalScore = updateQuality(values);
-    updateRequestBlueprint(values);
+    updateQuality(values);
     renderStressTest(values);
-    const sensitive = values.sensitivityInput === "personal" || values.sensitivityInput === "sensitive";
-    setDecisionCheck("privacyCheck", values.sensitivityInput ? (sensitive ? "warn" : "good") : "pending", sensitive ? "Isikuandmed vajavad õiguslikku alust ja minimaalset andmehulka" : values.sensitivityInput ? "Andmete tundlikkus on määratud" : "Määra andmete tundlikkus");
-    setDecisionCheck("structureCheck", values.formatInput ? "good" : "pending", values.formatInput ? "API vastuse vorming on määratud" : "Määra vastuse vorming");
-    setDecisionCheck("reviewCheck", values.controlInput ? "good" : "pending", values.controlInput ? "Inimkontroll on töövoos nähtav" : "Määra inimkontroll");
-    setDecisionCheck("resilienceCheck", values.fallbackInput ? "good" : "pending", values.fallbackInput ? "Tõrkeplaan on olemas" : "Määra tõrkeplaan");
-
-    const summary = $("#plannerSummary");
-    summary.classList.toggle("good", showResult && completedFields === plannerFields.length);
-    if (!showResult) {
-      summary.textContent = "Tee valikud. Skeem, valmidusskoor ja API-päringu visand uuenevad automaatselt; nupuga saad valmis töövoo kinnitada.";
-    } else if (completedFields === plannerFields.length) {
-      summary.textContent = `Valmis. Valmidusskoor on ${totalScore}/100. ${plannerLabel("environmentInput", "Valitud keskkond")} käivitab töövoo: ${plannerLabel("sourceInput", "andmeallikas")} → ${plannerLabel("modelInput", "AI API")} → ${plannerLabel("visualInput", "tulemuse vaade")} → ${plannerLabel("controlInput", "inimkontroll")}.`;
-    } else {
-      summary.textContent = `Visand on pooleli: tee veel ${plannerFields.length - completedFields} valikut. Terviklik töövoog vajab sisendit, piiratud AI rolli, väljundit, inimkontrolli ja tõrkeplaani.`;
-    }
     syncHeight();
   }
 
   function resetPlanner() {
     $("#workflowPlanner").reset();
     $("#stressInput").value = "";
-    updatePlannerPreview(false);
+    updatePlannerPreview();
   }
 
   function reset() {
@@ -932,8 +876,6 @@
     els.flowPackage.classList.remove("active");
     els.flowApi.classList.remove("active");
     els.flowMap.classList.remove("sending", "returning");
-    els.resultEmpty.hidden = false;
-    els.resultContent.hidden = true;
     els.modelGuide.hidden = true;
     els.practiceSuite.classList.add("locked");
     els.practiceSuite.setAttribute("aria-disabled", "true");
@@ -965,13 +907,12 @@
   els.prevLesson.addEventListener("click", () => showStep(currentStep - 1, true));
   els.nextLesson.addEventListener("click", () => showStep(currentStep + 1, true));
   $("#resetButton").addEventListener("click", reset);
-  plannerFields.forEach((id) => $(`#${id}`).addEventListener("change", () => updatePlannerPreview(false)));
+  plannerFields.forEach((id) => $(`#${id}`).addEventListener("change", updatePlannerPreview));
   $("#stressInput").addEventListener("change", () => {
     const values = Object.fromEntries(plannerFields.map((id) => [id, plannerValue(id)]));
     renderStressTest(values);
     syncHeight();
   });
-  $("#buildWorkflow").addEventListener("click", () => updatePlannerPreview(true));
   $("#clearWorkflow").addEventListener("click", resetPlanner);
   els.modelGuide.addEventListener("click", () => {
     const target = $('[data-run="4"]');
@@ -982,7 +923,7 @@
     const dialogStep = Number(els.flowDialog.dataset.step || 0);
     els.flowDialog.close();
     if (dialogStep === 4) {
-      window.setTimeout(() => alignResponseWithLesson(5), 120);
+      window.setTimeout(alignPostResponseWithAiLesson, 120);
     } else if (dialogStep === 3 && !els.modelGuide.hidden) {
       window.setTimeout(alignPostResponseWithAiLesson, 120);
     } else if (dialogStep === 1) {
@@ -1003,6 +944,6 @@
   updateRequestPreview();
   updateProgress();
   showStep(1);
-  updatePlannerPreview(false);
+  updatePlannerPreview();
   window.setTimeout(syncHeight, 100);
 })();
